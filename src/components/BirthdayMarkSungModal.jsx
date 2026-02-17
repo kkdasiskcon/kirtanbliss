@@ -1,0 +1,135 @@
+
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Save } from "lucide-react";
+import { AARTI_TYPES } from "../config";
+import { useState, useEffect } from "react";
+
+export default function BirthdayMarkSungModal({
+    devotee,
+    updating,
+    onClose,
+    onConfirm,
+}) {
+    const [selectedAarti, setSelectedAarti] = useState(AARTI_TYPES[0]);
+
+    // Scroll to top when modal opens
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [devotee]);
+
+    const handleConfirm = () => {
+        onConfirm(selectedAarti.name.replace(" Singing", ""));
+    };
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                className="modal-overlay"
+                onClick={!updating ? onClose : undefined}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+            >
+                <motion.div
+                    className="modal-content glass-panel"
+                    onClick={(e) => e.stopPropagation()}
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    style={{
+                        maxWidth: "500px",
+                        width: "90%",
+                        background: "white",
+                        border: "1px solid rgba(0,0,0,0.1)",
+                        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)"
+                    }}
+                >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                        <h3 style={{ margin: 0, color: "var(--text-primary)" }}>
+                            Mark as Sung
+                        </h3>
+                        <button
+                            onClick={onClose}
+                            disabled={updating}
+                            style={{ background: "transparent", padding: "0.25rem", color: "var(--text-secondary)", border: "none", cursor: "pointer" }}
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <p style={{ fontSize: "1.5rem", color: "var(--color-saffron)", textAlign: "center", margin: "0 0 1.5rem 0", fontWeight: 700 }}>
+                        {devotee["Devotee Name"]}
+                    </p>
+
+                    <div style={{ marginBottom: "1.5rem" }}>
+                        <label style={{ display: "block", marginBottom: "0.75rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                            Select Aarti:
+                        </label>
+                        <select
+                            value={selectedAarti.name}
+                            onChange={(e) => {
+                                const aarti = AARTI_TYPES.find(a => a.name === e.target.value);
+                                setSelectedAarti(aarti);
+                            }}
+                            disabled={updating}
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "8px",
+                                border: "2px solid var(--border-color)",
+                                background: "white",
+                                color: "var(--text-primary)",
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                cursor: updating ? "not-allowed" : "pointer",
+                                transition: "all 0.3s",
+                                outline: "none"
+                            }}
+                        >
+                            {AARTI_TYPES.map((aarti) => (
+                                <option key={aarti.name} value={aarti.name}>
+                                    {aarti.name.replace(" Singing", "")}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <p style={{ textAlign: "center", color: "var(--text-secondary)", marginBottom: "2rem", fontSize: "0.95rem" }}>
+                        This will add an entry to the history for today.
+                    </p>
+
+                    <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+                        <button
+                            className="modal-button"
+                            onClick={onClose}
+                            disabled={updating}
+                            style={{ borderColor: "rgba(0,0,0,0.1)", color: "var(--text-secondary)" }}
+                            type="button"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            className="modal-button primary"
+                            onClick={handleConfirm}
+                            disabled={updating}
+                            style={{ background: "var(--color-saffron)", color: "white", borderColor: "var(--color-saffron)", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                            type="button"
+                        >
+                            {updating ? (
+                                <>
+                                    <div className="spinner-small" style={{ borderColor: "rgba(255,255,255,0.3)", borderTopColor: "white", width: "16px", height: "16px" }}></div>
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={18} /> Confirm
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
