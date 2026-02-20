@@ -12,6 +12,7 @@ export default function ManageDevotees() {
     const [devotees, setDevotees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedIds, setSelectedIds] = useState([]);
     const [editingDevotee, setEditingDevotee] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -44,9 +45,6 @@ export default function ManageDevotees() {
         if (!window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) return;
 
         try {
-            // First delete history to satisfy foreign key constraints (if cascade is not set up)
-            // But usually we set ON DELETE CASCADE in SQL. Assuming it might not be there, best to try delete.
-            // Actually, for safety, let's try delete directly.
             const { error } = await supabase
                 .from("devotees")
                 .delete()
@@ -55,6 +53,7 @@ export default function ManageDevotees() {
             if (error) throw error;
 
             toast.success(`${name} deleted successfully.`);
+            setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
             fetchDevotees();
         } catch (err) {
             console.error("Error deleting devotee:", err);
@@ -62,14 +61,49 @@ export default function ManageDevotees() {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} selected devotees? This action cannot be undone.`)) return;
+
+        try {
+            const { error } = await supabase
+                .from("devotees")
+                .delete()
+                .in("id", selectedIds);
+
+            if (error) throw error;
+
+            toast.success(`${selectedIds.length} devotees deleted successfully.`);
+            setSelectedIds([]);
+            fetchDevotees();
+        } catch (err) {
+            console.error("Error bulk deleting devotees:", err);
+            toast.error("Failed to delete some records. They might have history records.");
+        }
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === paginatedDevotees.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(paginatedDevotees.map(d => d.id));
+        }
+    };
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
     const filteredDevotees = devotees.filter(d =>
         d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (d.contact && d.contact.includes(searchQuery))
     );
 
-    // Reset to page 1 when search changes
+    // Reset to page 1 and clear selection when search changes
     useEffect(() => {
         setCurrentPage(1);
+        setSelectedIds([]);
     }, [searchQuery]);
 
     // Pagination calculations
@@ -81,17 +115,39 @@ export default function ManageDevotees() {
     return (
         <div style={{ padding: "1.5rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: 'wrap', gap: '1rem' }}>
-                <div style={{ position: "relative", flex: 1, minWidth: "250px", maxWidth: "400px" }}>
-                    <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                    <input
-                        type="text"
-                        placeholder="Search by name or phone..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ width: "100%", paddingLeft: "2.8rem", padding: "0.75rem 1rem 0.75rem 2.8rem", borderRadius: "8px", border: "2px solid var(--border-color)", background: "white", color: "var(--text-primary)", fontSize: "0.95rem", transition: "all 0.3s", outline: "none" }}
-                    />
+                <div style={{ display: "flex", gap: "1rem", flex: 1, minWidth: "250px", maxWidth: "400px" }}>
+                    <div style={{ position: "relative", flex: 1 }}>
+                        <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                        <input
+                            type="text"
+                            placeholder="Search by name or phone..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ width: "100%", paddingLeft: "2.8rem", padding: "0.75rem 1rem 0.75rem 2.8rem", borderRadius: "8px", border: "2px solid var(--border-color)", background: "white", color: "var(--text-primary)", fontSize: "0.95rem", transition: "all 0.3s", outline: "none" }}
+                        />
+                    </div>
                 </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    {selectedIds.length > 0 && (
+                        <button
+                            onClick={handleBulkDelete}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                padding: "0.75rem 1rem",
+                                borderRadius: "8px",
+                                border: "1px solid #fee2e2",
+                                background: "#fef2f2",
+                                color: "#ef4444",
+                                cursor: "pointer",
+                                fontSize: "0.9rem",
+                                fontWeight: "500"
+                            }}
+                        >
+                            <Trash2 size={18} /> Delete Selected ({selectedIds.length})
+                        </button>
+                    )}
                     <button
                         className="modal-button"
                         onClick={() => setShowCsvModal(true)}
@@ -116,6 +172,14 @@ export default function ManageDevotees() {
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem" }}>
                             <thead>
                                 <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                                    <th style={{ padding: "1rem", width: "40px" }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={paginatedDevotees.length > 0 && selectedIds.length === paginatedDevotees.length}
+                                            onChange={toggleSelectAll}
+                                            style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                                        />
+                                    </th>
                                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Name</th>
                                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Contact</th>
                                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>DOB</th>
@@ -126,6 +190,14 @@ export default function ManageDevotees() {
                             <tbody>
                                 {paginatedDevotees.map((devotee) => (
                                     <tr key={devotee.id} style={{ borderBottom: "1px solid #f3f4f6", transition: "background 0.2s" }} className="hover-row">
+                                        <td style={{ padding: "1rem" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(devotee.id)}
+                                                onChange={() => toggleSelect(devotee.id)}
+                                                style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                                            />
+                                        </td>
                                         <td style={{ padding: "1rem", fontWeight: 500, color: "var(--text-primary)" }}>
                                             {devotee.name}
                                             {devotee.devotee_type && (
@@ -197,7 +269,7 @@ export default function ManageDevotees() {
                                 ))}
                                 {filteredDevotees.length === 0 && (
                                     <tr>
-                                        <td colSpan="5" style={{ padding: "2rem", textAlign: "center", color: "var(--text-secondary)" }}>
+                                        <td colSpan="6" style={{ padding: "2rem", textAlign: "center", color: "var(--text-secondary)" }}>
                                             No devotees found matching "{searchQuery}"
                                         </td>
                                     </tr>
@@ -213,7 +285,10 @@ export default function ManageDevotees() {
                             </div>
                             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                                 <button
-                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    onClick={() => {
+                                        setCurrentPage(Math.max(1, currentPage - 1));
+                                        setSelectedIds([]);
+                                    }}
                                     disabled={currentPage === 1}
                                     style={{
                                         padding: "0.5rem 1rem",
@@ -231,7 +306,10 @@ export default function ManageDevotees() {
                                     Page {currentPage} of {totalPages || 1}
                                 </div>
                                 <button
-                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    onClick={() => {
+                                        setCurrentPage(Math.min(totalPages, currentPage + 1));
+                                        setSelectedIds([]);
+                                    }}
                                     disabled={currentPage === totalPages || totalPages === 0}
                                     style={{
                                         padding: "0.5rem 1rem",
@@ -263,6 +341,13 @@ export default function ManageDevotees() {
                 <AddDevoteeModal
                     onClose={() => setShowAddModal(false)}
                     onDevoteeAdded={fetchDevotees}
+                />
+            )}
+
+            {showCsvModal && (
+                <CsvUploadModal
+                    onClose={() => setShowCsvModal(false)}
+                    onUploadSuccess={fetchDevotees}
                 />
             )}
         </div>

@@ -12,32 +12,33 @@ export default function DevoteeCard({ devotee, index, onMarkSung }) {
         <div className="devotee-card">
             <div className="devotee-rank">#{index + 1}</div>
 
-            <div className="devotee-info">
-                <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div className="devotee-info" style={{ minWidth: 0, flex: 1 }}>
+                <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', wordBreak: 'break-word' }}>
                     {devotee["Devotee Name"]}
                     {devotee.devotee_type && (
                         <span style={{
-                            fontSize: "0.7rem",
+                            fontSize: "0.65rem",
                             background: devotee.devotee_type === "Brahmachari" ? "#fff7ed" : devotee.devotee_type === "VOICE Devotee" ? "#eff6ff" : "#f1f5f9",
                             color: devotee.devotee_type === "Brahmachari" ? "#c2410c" : devotee.devotee_type === "VOICE Devotee" ? "#1e40af" : "#64748b",
                             padding: "0.1rem 0.5rem",
                             borderRadius: "50px",
                             border: `1px solid ${devotee.devotee_type === "Brahmachari" ? "#fdba74" : devotee.devotee_type === "VOICE Devotee" ? "#bfdbfe" : "#cbd5e1"}`,
-                            fontWeight: 600
+                            fontWeight: 600,
+                            whiteSpace: 'nowrap'
                         }}>
                             {devotee.devotee_type}
                         </span>
                     )}
                 </h3>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
                         Last: <strong style={{ color: 'var(--text-primary)' }}>{lastSung}</strong>
                     </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
                         Sung: <strong style={{ color: 'var(--text-primary)' }}>{timesSung}</strong>
                     </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', opacity: 0.7 }}>
-                        Priority: {priority}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', opacity: 0.7, whiteSpace: 'nowrap' }}>
+                        Prio: {priority}
                     </span>
                 </div>
             </div>

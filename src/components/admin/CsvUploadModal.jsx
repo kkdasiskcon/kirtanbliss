@@ -1,6 +1,6 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import Portal from "../Portal";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, FileText, Download, CheckCircle, AlertTriangle } from "lucide-react";
 import Papa from "papaparse";
@@ -111,116 +111,118 @@ export default function CsvUploadModal({ onClose, onUploadComplete }) {
     };
 
     return (
-        <AnimatePresence>
-            <motion.div
-                className="modal-overlay"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-            >
+        <Portal>
+            <AnimatePresence>
                 <motion.div
-                    className="modal-content glass-panel"
-                    style={{ background: "white", width: "95%", maxWidth: "600px", padding: "0" }}
-                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    onClick={(e) => e.stopPropagation()}
+                    className="modal-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
                 >
-                    <div className="modal-header" style={{ padding: "1.5rem", borderBottom: "1px solid rgba(0,0,0,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
-                            <Upload size={20} color="var(--color-saffron)" /> Bulk Upload Devotees
-                        </h3>
-                        <button onClick={onClose} style={{ background: "transparent", border: "none", padding: "0.25rem" }}>
-                            <X size={20} color="var(--text-secondary)" />
-                        </button>
-                    </div>
+                    <motion.div
+                        className="modal-content glass-panel"
+                        style={{ background: "white", width: "95%", maxWidth: "600px", padding: "0", display: "flex", flexDirection: "column" }}
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-header" style={{ padding: "1.5rem", borderBottom: "1px solid rgba(0,0,0,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+                            <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)", fontWeight: 700 }}>
+                                <Upload size={20} color="var(--color-saffron)" /> Bulk Upload Devotees
+                            </h3>
+                            <button onClick={onClose} style={{ background: "transparent", border: "none", padding: "0.25rem", cursor: "pointer" }}>
+                                <X size={20} color="var(--text-secondary)" />
+                            </button>
+                        </div>
 
-                    <div style={{ padding: "1.5rem" }}>
-                        {!stats ? (
-                            <>
-                                <div style={{ marginBottom: "1.5rem", background: "#f8fafc", padding: "1rem", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                                    <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.95rem", color: "var(--text-primary)" }}>Instructions:</h4>
-                                    <ol style={{ margin: 0, paddingLeft: "1.2rem", color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: "1.5" }}>
-                                        <li>Download the CSV template below.</li>
-                                        <li>Fill in the devotee details (Name is mandatory).</li>
-                                        <li>Skills should be comma-separated (e.g., "Mangala Aarti, Narsimha Aarti").</li>
-                                        <li>Devotee Type options: <strong>Congregation Devotee, Brahmachari, VOICE Devotee</strong>.</li>
-                                    </ol>
-                                    <button
-                                        onClick={downloadTemplate}
-                                        style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", color: "var(--color-saffron)", background: "transparent", border: "1px solid var(--color-saffron)", padding: "0.4rem 0.8rem", borderRadius: "6px", cursor: "pointer" }}
-                                    >
-                                        <Download size={16} /> Download Template
-                                    </button>
-                                </div>
+                        <div style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}>
+                            {!stats ? (
+                                <>
+                                    <div style={{ marginBottom: "1.5rem", background: "#f8fafc", padding: "1rem", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                                        <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.95rem", color: "var(--text-primary)" }}>Instructions:</h4>
+                                        <ol style={{ margin: 0, paddingLeft: "1.2rem", color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: "1.5" }}>
+                                            <li>Download the CSV template below.</li>
+                                            <li>Fill in the devotee details (Name is mandatory).</li>
+                                            <li>Skills should be comma-separated (e.g., "Mangala Aarti, Narsimha Aarti").</li>
+                                            <li>Devotee Type options: <strong>Congregation Devotee, Brahmachari, VOICE Devotee</strong>.</li>
+                                        </ol>
+                                        <button
+                                            onClick={downloadTemplate}
+                                            style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", color: "var(--color-saffron)", background: "transparent", border: "1px solid var(--color-saffron)", padding: "0.4rem 0.8rem", borderRadius: "6px", cursor: "pointer" }}
+                                        >
+                                            <Download size={16} /> Download Template
+                                        </button>
+                                    </div>
 
-                                <div className="upload-area" style={{
-                                    border: "2px dashed #cbd5e1",
-                                    borderRadius: "12px",
-                                    padding: "2rem",
-                                    textAlign: "center",
-                                    background: uploading ? "#f1f5f9" : "white",
-                                    cursor: "pointer",
-                                    position: "relative"
-                                }}>
-                                    <input
-                                        type="file"
-                                        accept=".csv"
-                                        onChange={handleFileUpload}
-                                        disabled={uploading}
-                                        style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
-                                    />
-                                    <div style={{ pointerEvents: "none" }}>
-                                        {uploading ? (
-                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-                                                <div className="spinner-small" style={{ width: "24px", height: "24px", borderTopColor: "var(--color-saffron)", borderRightColor: "var(--color-saffron)" }}></div>
-                                                <span style={{ color: "var(--text-secondary)" }}>Processing CSV...</span>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <FileText size={48} color="#94a3b8" style={{ marginBottom: "1rem" }} />
-                                                <p style={{ margin: 0, fontWeight: 600, color: "var(--text-primary)" }}>Click to upload CSV</p>
-                                                <p style={{ margin: "0.5rem 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>or drag and drop file here</p>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="results-area">
-                                <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
-                                    <div style={{ flex: 1, background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
-                                        <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#16a34a" }}>{stats.added}</div>
-                                        <div style={{ fontSize: "0.85rem", color: "#15803d" }}>Successfully Added</div>
-                                    </div>
-                                    <div style={{ flex: 1, background: "#fef2f2", border: "1px solid #fecaca", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
-                                        <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#dc2626" }}>{stats.errors}</div>
-                                        <div style={{ fontSize: "0.85rem", color: "#b91c1c" }}>Errors</div>
-                                    </div>
-                                </div>
-
-                                <div style={{ maxHeight: "200px", overflowY: "auto", background: "#f8fafc", padding: "1rem", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", fontFamily: "monospace" }}>
-                                    {logs.map((log, i) => (
-                                        <div key={i} style={{ marginBottom: "0.25rem", color: log.startsWith("✅") ? "#15803d" : "#b91c1c" }}>
-                                            {log}
+                                    <div className="upload-area" style={{
+                                        border: "2px dashed #cbd5e1",
+                                        borderRadius: "12px",
+                                        padding: "2rem",
+                                        textAlign: "center",
+                                        background: uploading ? "#f1f5f9" : "white",
+                                        cursor: "pointer",
+                                        position: "relative"
+                                    }}>
+                                        <input
+                                            type="file"
+                                            accept=".csv"
+                                            onChange={handleFileUpload}
+                                            disabled={uploading}
+                                            style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+                                        />
+                                        <div style={{ pointerEvents: "none" }}>
+                                            {uploading ? (
+                                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+                                                    <div className="spinner-small" style={{ width: "24px", height: "24px", borderTopColor: "var(--color-saffron)", borderRightColor: "var(--color-saffron)" }}></div>
+                                                    <span style={{ color: "var(--text-secondary)" }}>Processing CSV...</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <FileText size={48} color="#94a3b8" style={{ marginBottom: "1rem" }} />
+                                                    <p style={{ margin: 0, fontWeight: 600, color: "var(--text-primary)" }}>Click to upload CSV</p>
+                                                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>or drag and drop file here</p>
+                                                </>
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="results-area">
+                                    <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
+                                        <div style={{ flex: 1, background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
+                                            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#16a34a" }}>{stats.added}</div>
+                                            <div style={{ fontSize: "0.85rem", color: "#15803d" }}>Successfully Added</div>
+                                        </div>
+                                        <div style={{ flex: 1, background: "#fef2f2", border: "1px solid #fecaca", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
+                                            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#dc2626" }}>{stats.errors}</div>
+                                            <div style={{ fontSize: "0.85rem", color: "#b91c1c" }}>Errors</div>
+                                        </div>
+                                    </div>
 
-                                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
-                                    <button
-                                        className="modal-button primary"
-                                        onClick={onClose}
-                                    >
-                                        Done
-                                    </button>
+                                    <div style={{ maxHeight: "200px", overflowY: "auto", background: "#f8fafc", padding: "1rem", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", fontFamily: "monospace" }}>
+                                        {logs.map((log, i) => (
+                                            <div key={i} style={{ marginBottom: "0.25rem", color: log.startsWith("✅") ? "#15803d" : "#b91c1c" }}>
+                                                {log}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
+                                        <button
+                                            className="modal-button primary"
+                                            onClick={onClose}
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    </motion.div>
                 </motion.div>
-            </motion.div>
-        </AnimatePresence>
+            </AnimatePresence>
+        </Portal>
     );
 }

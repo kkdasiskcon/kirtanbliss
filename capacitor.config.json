@@ -1,0 +1,6 @@
+{
+  "appId": "com.bliss.kirtan",
+  "appName": "Kirtan Bliss",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

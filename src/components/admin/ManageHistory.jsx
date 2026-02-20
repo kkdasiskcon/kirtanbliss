@@ -8,6 +8,7 @@ export default function ManageHistory() {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedIds, setSelectedIds] = useState([]);
     const [filterAarti, setFilterAarti] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 50;
@@ -56,11 +57,46 @@ export default function ManageHistory() {
             if (error) throw error;
 
             toast.success("Record deleted.");
+            setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
             setHistory(history.filter(h => h.id !== id));
         } catch (err) {
             console.error("Error deleting record:", err);
             toast.error("Failed to delete record.");
         }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} selected history records?`)) return;
+
+        try {
+            const { error } = await supabase
+                .from("history")
+                .delete()
+                .in("id", selectedIds);
+
+            if (error) throw error;
+
+            toast.success(`${selectedIds.length} records deleted.`);
+            setSelectedIds([]);
+            fetchHistory();
+        } catch (err) {
+            console.error("Error bulk deleting history:", err);
+            toast.error("Failed to delete records.");
+        }
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === paginatedHistory.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(paginatedHistory.map(h => h.id));
+        }
+    };
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
     };
 
     const filteredHistory = history.filter(item => {
@@ -69,9 +105,10 @@ export default function ManageHistory() {
         return matchesSearch && matchesFilter;
     });
 
-    // Reset to page 1 when filters change
+    // Reset to page 1 and clear selection when filters change
     useEffect(() => {
         setCurrentPage(1);
+        setSelectedIds([]);
     }, [searchTerm, filterAarti]);
 
     // Pagination calculations
@@ -109,12 +146,34 @@ export default function ManageHistory() {
                         </select>
                     </div>
                 </div>
-                <button
-                    onClick={fetchHistory}
-                    style={{ background: "white", border: "1px solid var(--border-color)", padding: "0.5rem 1rem", borderRadius: "8px", cursor: "pointer", color: "var(--text-secondary)" }}
-                >
-                    Refresh
-                </button>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    {selectedIds.length > 0 && (
+                        <button
+                            onClick={handleBulkDelete}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                padding: "0.75rem 1rem",
+                                borderRadius: "8px",
+                                border: "1px solid #fee2e2",
+                                background: "#fef2f2",
+                                color: "#ef4444",
+                                cursor: "pointer",
+                                fontSize: "0.9rem",
+                                fontWeight: "500"
+                            }}
+                        >
+                            <Trash2 size={18} /> Delete Selected ({selectedIds.length})
+                        </button>
+                    )}
+                    <button
+                        onClick={fetchHistory}
+                        style={{ background: "white", border: "1px solid var(--border-color)", padding: "0.5rem 1rem", borderRadius: "8px", cursor: "pointer", color: "var(--text-secondary)" }}
+                    >
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {loading ? (
@@ -125,6 +184,14 @@ export default function ManageHistory() {
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem" }}>
                             <thead>
                                 <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                                    <th style={{ padding: "1rem", width: "40px" }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={paginatedHistory.length > 0 && selectedIds.length === paginatedHistory.length}
+                                            onChange={toggleSelectAll}
+                                            style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                                        />
+                                    </th>
                                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Date</th>
                                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Devotee</th>
                                     <th style={{ padding: "1rem", color: "var(--text-secondary)" }}>Aarti</th>
@@ -134,6 +201,14 @@ export default function ManageHistory() {
                             <tbody>
                                 {paginatedHistory.map((h) => (
                                     <tr key={h.id} style={{ borderBottom: "1px solid #f3f4f6" }} className="hover-row">
+                                        <td style={{ padding: "1rem" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(h.id)}
+                                                onChange={() => toggleSelect(h.id)}
+                                                style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                                            />
+                                        </td>
                                         <td style={{ padding: "1rem", color: "var(--text-secondary)" }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                                 <Calendar size={14} /> {h.sung_date}
@@ -167,7 +242,7 @@ export default function ManageHistory() {
                                 ))}
                                 {filteredHistory.length === 0 && (
                                     <tr>
-                                        <td colSpan="4" style={{ padding: "2rem", textAlign: "center", color: "var(--text-secondary)" }}>
+                                        <td colSpan="5" style={{ padding: "2rem", textAlign: "center", color: "var(--text-secondary)" }}>
                                             No history records found.
                                         </td>
                                     </tr>
@@ -183,7 +258,10 @@ export default function ManageHistory() {
                             </div>
                             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                                 <button
-                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    onClick={() => {
+                                        setCurrentPage(Math.max(1, currentPage - 1));
+                                        setSelectedIds([]);
+                                    }}
                                     disabled={currentPage === 1}
                                     style={{
                                         padding: "0.5rem 1rem",
@@ -201,7 +279,10 @@ export default function ManageHistory() {
                                     Page {currentPage} of {totalPages || 1}
                                 </div>
                                 <button
-                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    onClick={() => {
+                                        setCurrentPage(Math.min(totalPages, currentPage + 1));
+                                        setSelectedIds([]);
+                                    }}
                                     disabled={currentPage === totalPages || totalPages === 0}
                                     style={{
                                         padding: "0.5rem 1rem",

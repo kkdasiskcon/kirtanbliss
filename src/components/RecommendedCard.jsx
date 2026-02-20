@@ -15,7 +15,6 @@ export default function RecommendedCard({ devotee, aartiName, onMarkSung, onClos
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             style={{
-                padding: "1.5rem",
                 border: "2px solid var(--color-saffron)",
                 background: "#fff7ed",
                 position: "relative"
@@ -49,38 +48,40 @@ export default function RecommendedCard({ devotee, aartiName, onMarkSung, onClos
                 </div>
 
                 {devotee["Contact"] && (
-                    <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.25rem" }}>
+                    <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
                         <a
                             href={`tel:${devotee["Contact"]}`}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                                 background: 'white', border: '1px solid #fed7aa', borderRadius: '8px',
-                                padding: '0.4rem 0.8rem', textDecoration: 'none', color: '#9a3412', fontWeight: 600, fontSize: '0.9rem'
+                                padding: '0.4rem 0.8rem', textDecoration: 'none', color: '#9a3412', fontWeight: 600, fontSize: '0.85rem',
+                                flex: '1', minWidth: '120px', justifyContent: 'center'
                             }}
                         >
-                            <Phone size={16} /> {devotee["Contact"]}
+                            <Phone size={14} /> {devotee["Contact"]}
                         </a>
                         <a
                             href={`sms:${devotee["Contact"]}`}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                                 background: 'white', border: '1px solid #fed7aa', borderRadius: '8px',
-                                padding: '0.4rem 0.8rem', textDecoration: 'none', color: '#9a3412', fontWeight: 600
+                                padding: '0.4rem 0.8rem', textDecoration: 'none', color: '#9a3412', fontWeight: 600, fontSize: '0.85rem',
+                                flex: '1', minWidth: '80px', justifyContent: 'center'
                             }}
                         >
-                            <MessageCircle size={16} /> SMS
+                            <MessageCircle size={14} /> SMS
                         </a>
                     </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(255,255,255,0.6)', padding: '1rem', borderRadius: '12px', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.75rem', background: 'rgba(255,255,255,0.6)', padding: '0.75rem', borderRadius: '12px', marginBottom: '1.25rem' }}>
                     <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: '#78350f', fontWeight: 700 }}>Last Sung</span>
-                        <span style={{ fontSize: '1.1rem', color: '#431407', fontWeight: 600 }}>{lastSung}</span>
+                        <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', color: '#78350f', fontWeight: 700 }}>Last Sung</span>
+                        <span style={{ fontSize: '1rem', color: '#431407', fontWeight: 600 }}>{lastSung}</span>
                     </div>
                     <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: '#78350f', fontWeight: 700 }}>Times Sung</span>
-                        <span style={{ fontSize: '1.1rem', color: '#431407', fontWeight: 600 }}>{devotee["Times Sung"] || 0}</span>
+                        <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', color: '#78350f', fontWeight: 700 }}>Times Sung</span>
+                        <span style={{ fontSize: '1rem', color: '#431407', fontWeight: 600 }}>{devotee["Times Sung"] || 0}</span>
                     </div>
                 </div>
 
