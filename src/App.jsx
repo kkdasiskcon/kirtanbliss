@@ -23,6 +23,7 @@ import UpdateModal from "./components/UpdateModal";
 import AddDevoteeModal from "./components/AddDevoteeModal";
 import BirthdayMarkSungModal from "./components/BirthdayMarkSungModal";
 import AdminDashboard from "./components/AdminDashboard";
+import LoginGate from "./components/LoginGate";
 
 
 export default function App() {
@@ -276,224 +277,226 @@ export default function App() {
   if (error && data.length === 0) return <ErrorMessage error={error} onRetry={fetchData} />;
 
   return (
-    <div className="app-container">
-      <Toaster position="top-right" />
-      <Header />
+    <LoginGate>
+      <div className="app-container">
+        <Toaster position="top-right" />
+        <Header />
 
-      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {activeTab === 'allocation' && (
-        <div className="top-controls">
-          <button
-            className="icon-button primary"
-            onClick={() => setShowAddDevotee(true)}
-            style={{
-              padding: '0.8rem 1.75rem',
-              fontSize: '1rem',
-              borderRadius: '50px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              boxShadow: '0 4px 15px rgba(234, 88, 12, 0.3)',
-              background: 'var(--color-saffron)',
-              color: 'white',
-              fontWeight: 'bold',
-              border: '2px solid white'
-            }}
-          >
-            <UserPlus size={20} /> Add New Devotee
-          </button>
-        </div>
-      )}
+        {activeTab === 'allocation' && (
+          <div className="top-controls">
+            <button
+              className="icon-button primary"
+              onClick={() => setShowAddDevotee(true)}
+              style={{
+                padding: '0.8rem 1.75rem',
+                fontSize: '1rem',
+                borderRadius: '50px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                boxShadow: '0 4px 15px rgba(234, 88, 12, 0.3)',
+                background: 'var(--color-saffron)',
+                color: 'white',
+                fontWeight: 'bold',
+                border: '2px solid white'
+              }}
+            >
+              <UserPlus size={20} /> Add New Devotee
+            </button>
+          </div>
+        )}
 
-      {activeTab === "allocation" && (
-        <>
-          <AartiSelector
-            selectedAarti={selectedAarti}
-            onSelect={setSelectedAarti}
-          />
+        {activeTab === "allocation" && (
+          <>
+            <AartiSelector
+              selectedAarti={selectedAarti}
+              onSelect={setSelectedAarti}
+            />
 
-          {filtered.length > 0 ? (
-            <div className="allocation-content">
-              {showRecommended && topCandidate && !searchQuery ? (
-                <RecommendedCard
-                  devotee={topCandidate}
-                  aartiName={selectedAarti.name}
-                  onMarkSung={handleMarkSung}
-                  onClose={() => setShowRecommended(false)}
-                />
-              ) : (
-                <div style={{ minWidth: '380px' }}></div>
-              )}
+            {filtered.length > 0 ? (
+              <div className="allocation-content">
+                {showRecommended && topCandidate && !searchQuery ? (
+                  <RecommendedCard
+                    devotee={topCandidate}
+                    aartiName={selectedAarti.name}
+                    onMarkSung={handleMarkSung}
+                    onClose={() => setShowRecommended(false)}
+                  />
+                ) : (
+                  <div style={{ minWidth: '380px' }}></div>
+                )}
 
-              <div className="eligible-section glass-panel">
-                <div className="section-header-row">
-                  <div className="section-title">
-                    <div style={{ background: '#fff7ed', padding: '0.6rem', borderRadius: '14px', color: 'var(--color-saffron)' }}>
-                      <ListFilter size={24} />
+                <div className="eligible-section glass-panel">
+                  <div className="section-header-row">
+                    <div className="section-title">
+                      <div style={{ background: '#fff7ed', padding: '0.6rem', borderRadius: '14px', color: 'var(--color-saffron)' }}>
+                        <ListFilter size={24} />
+                      </div>
+                      <div>
+                        <h2 style={{ fontSize: '1.25rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Eligible Devotees</h2>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{filteredBySearch.length} available</span>
+                      </div>
                     </div>
-                    <div>
-                      <h2 style={{ fontSize: '1.25rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Eligible Devotees</h2>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{filteredBySearch.length} available</span>
-                    </div>
-                  </div>
 
-                  <div style={{ position: 'relative', minWidth: '280px', display: 'flex', gap: '0.5rem' }}>
-                    <div style={{ flex: 1, position: 'relative' }}>
-                      <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                      <input
-                        type="text"
-                        className="list-search"
-                        placeholder="Search name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                    <div style={{ position: 'relative', minWidth: '280px', display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <input
+                          type="text"
+                          className="list-search"
+                          placeholder="Search name..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          style={{
+                            paddingLeft: '2.8rem',
+                            height: '46px',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            borderRadius: '14px',
+                            border: '1px solid #e5e7eb',
+                            background: '#f8fafc'
+                          }}
+                        />
+                      </div>
+
+                      <select
+                        value={devoteeTypeFilter}
+                        onChange={(e) => setDevoteeTypeFilter(e.target.value)}
                         style={{
-                          paddingLeft: '2.8rem',
                           height: '46px',
-                          width: '100%',
-                          boxSizing: 'border-box',
+                          padding: '0 1rem',
                           borderRadius: '14px',
                           border: '1px solid #e5e7eb',
-                          background: '#f8fafc'
+                          background: '#f8fafc',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          fontWeight: 500
                         }}
-                      />
+                      >
+                        <option value="all">All Types</option>
+                        <option value="Congregation Devotee">Congregation</option>
+                        <option value="Brahmachari">Brahmachari</option>
+                        <option value="VOICE Devotee">VOICE</option>
+                      </select>
                     </div>
+                  </div>
 
-                    <select
-                      value={devoteeTypeFilter}
-                      onChange={(e) => setDevoteeTypeFilter(e.target.value)}
-                      style={{
-                        height: '46px',
-                        padding: '0 1rem',
-                        borderRadius: '14px',
-                        border: '1px solid #e5e7eb',
-                        background: '#f8fafc',
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        fontWeight: 500
-                      }}
-                    >
-                      <option value="all">All Types</option>
-                      <option value="Congregation Devotee">Congregation</option>
-                      <option value="Brahmachari">Brahmachari</option>
-                      <option value="VOICE Devotee">VOICE</option>
-                    </select>
+                  <div className="devotees-list">
+                    {filteredBySearch.map((d, index) => (
+                      <DevoteeCard
+                        key={d.id}
+                        devotee={d}
+                        index={index}
+                        onMarkSung={handleMarkSung}
+                      />
+                    ))}
                   </div>
                 </div>
-
-                <div className="devotees-list">
-                  {filteredBySearch.map((d, index) => (
-                    <DevoteeCard
-                      key={d.id}
-                      devotee={d}
-                      index={index}
-                      onMarkSung={handleMarkSung}
-                    />
-                  ))}
-                </div>
               </div>
-            </div>
-          ) : (
-            <div className="no-results glass-panel" style={{ padding: '3rem', textAlign: 'center', background: 'white' }}>
-              <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
-                No qualified devotees found for <strong style={{ color: 'var(--color-saffron)' }}>{selectedAarti.name.replace(' Singing', '')}</strong>
-              </p>
-              <button
-                className="mark-sung-button"
-                onClick={() => setShowAddDevotee(true)}
-                style={{ marginTop: '1.5rem', background: 'var(--color-saffron)', color: 'white' }}
-              >
-                <UserPlus size={18} /> Add New Devotee
-              </button>
-            </div>
-          )}
-        </>
-      )}
+            ) : (
+              <div className="no-results glass-panel" style={{ padding: '3rem', textAlign: 'center', background: 'white' }}>
+                <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
+                  No qualified devotees found for <strong style={{ color: 'var(--color-saffron)' }}>{selectedAarti.name.replace(' Singing', '')}</strong>
+                </p>
+                <button
+                  className="mark-sung-button"
+                  onClick={() => setShowAddDevotee(true)}
+                  style={{ marginTop: '1.5rem', background: 'var(--color-saffron)', color: 'white' }}
+                >
+                  <UserPlus size={18} /> Add New Devotee
+                </button>
+              </div>
+            )}
+          </>
+        )}
 
-      {activeTab === "allocation" && !showRecommended && filtered.length > 0 && topCandidate && !searchQuery && (
-        <button
-          onClick={() => setShowRecommended(true)}
-          style={{
-            position: 'fixed',
-            bottom: '2rem',
-            right: '2rem',
-            background: 'linear-gradient(135deg, var(--color-saffron), var(--color-saffron-dark))',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            width: '60px',
-            height: '60px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(37, 99, 235, 0.4)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            zIndex: 100,
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            hover: {
-              transform: 'scale(1.1)',
-              boxShadow: '0 12px 32px rgba(37, 99, 235, 0.5)'
-            }
-          }}
-          title="Show recommended singer"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.1)';
-            e.currentTarget.style.boxShadow = '0 12px 32px rgba(37, 99, 235, 0.5)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 8px 24px rgba(37, 99, 235, 0.4)';
-          }}
-        >
-          ⭐
-        </button>
-      )}
+        {activeTab === "allocation" && !showRecommended && filtered.length > 0 && topCandidate && !searchQuery && (
+          <button
+            onClick={() => setShowRecommended(true)}
+            style={{
+              position: 'fixed',
+              bottom: '2rem',
+              right: '2rem',
+              background: 'linear-gradient(135deg, var(--color-saffron), var(--color-saffron-dark))',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              width: '60px',
+              height: '60px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(37, 99, 235, 0.4)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              zIndex: 100,
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              hover: {
+                transform: 'scale(1.1)',
+                boxShadow: '0 12px 32px rgba(37, 99, 235, 0.5)'
+              }
+            }}
+            title="Show recommended singer"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.1)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(37, 99, 235, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(37, 99, 235, 0.4)';
+            }}
+          >
+            ⭐
+          </button>
+        )}
 
-      {activeTab === "history" && (
-        <HistoryList
-          history={recentSingersFiltered}
-          filter={historyAartiFilter}
-          onFilterChange={setHistoryAartiFilter}
-          detectAarti={(d) => d["Sung Aarti"]}
-        />
-      )}
+        {activeTab === "history" && (
+          <HistoryList
+            history={recentSingersFiltered}
+            filter={historyAartiFilter}
+            onFilterChange={setHistoryAartiFilter}
+            detectAarti={(d) => d["Sung Aarti"]}
+          />
+        )}
 
-      {activeTab === "birthdays" && (
-        <BirthdayList birthdays={upcomingBirthdays} onMarkSung={handleMarkSungFromBirthday} />
-      )}
+        {activeTab === "birthdays" && (
+          <BirthdayList birthdays={upcomingBirthdays} onMarkSung={handleMarkSungFromBirthday} />
+        )}
 
-      {showMarkSung && selectedDevotee && (
-        <UpdateModal
-          devotee={selectedDevotee}
-          updateStatus={updateStatus}
-          updating={updating}
-          onClose={() => !updating && setShowMarkSung(false)}
-          onRefresh={confirmMarkSung}
-          isSupabase={true}
-        />
-      )}
+        {showMarkSung && selectedDevotee && (
+          <UpdateModal
+            devotee={selectedDevotee}
+            updateStatus={updateStatus}
+            updating={updating}
+            onClose={() => !updating && setShowMarkSung(false)}
+            onRefresh={confirmMarkSung}
+            isSupabase={true}
+          />
+        )}
 
-      {activeTab === "admin" && (
-        <AdminDashboard />
-      )}
+        {activeTab === "admin" && (
+          <AdminDashboard />
+        )}
 
-      {showAddDevotee && (
-        <AddDevoteeModal
-          onClose={() => setShowAddDevotee(false)}
-          onDevoteeAdded={fetchData}
-        />
-      )}
+        {showAddDevotee && (
+          <AddDevoteeModal
+            onClose={() => setShowAddDevotee(false)}
+            onDevoteeAdded={fetchData}
+          />
+        )}
 
-      {showBirthdayMarkSung && birthdayDevotee && (
-        <BirthdayMarkSungModal
-          devotee={birthdayDevotee}
-          updating={updating}
-          onClose={() => !updating && setShowBirthdayMarkSung(false)}
-          onConfirm={confirmBirthdayMarkSung}
-        />
-      )}
-    </div>
+        {showBirthdayMarkSung && birthdayDevotee && (
+          <BirthdayMarkSungModal
+            devotee={birthdayDevotee}
+            updating={updating}
+            onClose={() => !updating && setShowBirthdayMarkSung(false)}
+            onConfirm={confirmBirthdayMarkSung}
+          />
+        )}
+      </div>
+    </LoginGate>
   );
 }
