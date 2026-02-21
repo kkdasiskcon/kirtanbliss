@@ -109,11 +109,17 @@ export default function App() {
   const filtered = data
     .filter((d) => {
       const aartiName = selectedAarti.name.replace(" Singing", "");
+
+      // Skills open for all
+      if (aartiName === "Balaji Mangal Aarti" || aartiName === "SP Worship") {
+        return true;
+      }
+
       const hasSkill = d.skills && d.skills.some(s => s.toLowerCase().includes(aartiName.toLowerCase()));
       if (!hasSkill) return false;
       return true;
     })
-    .sort((a, b) => calculatePriority(b) - calculatePriority(a));
+    .sort((a, b) => a["Devotee Name"].localeCompare(b["Devotee Name"]));
 
   const filteredBySearch = filtered.filter((d) => {
     // Search Filter

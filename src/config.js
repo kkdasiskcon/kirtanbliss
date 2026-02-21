@@ -20,4 +20,12 @@ export const AARTI_TYPES = [
     name: "Gurupuja Singing",
     keywords: ["gurupuja", "guru pooja", "guru puja", "gurupooja"],
   },
+  {
+    name: "Balaji Mangal Aarti",
+    keywords: ["balaji", "mangal", "balaji mangal"],
+  },
+  {
+    name: "SP Worship",
+    keywords: ["sp worship", "srila prabhupada worship", "prabhupada worship"],
+  },
 ];
