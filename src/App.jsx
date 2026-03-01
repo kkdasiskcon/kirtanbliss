@@ -62,30 +62,28 @@ export default function App() {
       setLoading(true);
       setError(null);
 
-      // Add timeout for mobile networks
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), 30000)
-      );
+      // Check if Supabase is properly initialized
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || window.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || window.VITE_SUPABASE_ANON_KEY;
 
-      const devoteesPromise = supabase
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase configuration is missing. Please check your .env file.');
+      }
+
+      // Fetch data with proper error handling
+      const { data: devotees, error: devoteesError } = await supabase
         .from("devotees")
         .select("*");
-
-      const historyPromise = supabase
-        .from("history")
-        .select("*")
-        .order("sung_date", { ascending: false });
-
-      const [{ data: devotees, error: devoteesError }, { data: history, error: historyError }] = 
-        await Promise.race([
-          Promise.all([devoteesPromise, historyPromise]),
-          timeoutPromise
-        ]);
 
       if (devoteesError) {
         console.error('Devotees error:', devoteesError);
         throw devoteesError;
       }
+
+      const { data: history, error: historyError } = await supabase
+        .from("history")
+        .select("*")
+        .order("sung_date", { ascending: false });
 
       if (historyError) {
         console.error('History error:', historyError);
@@ -121,13 +119,15 @@ export default function App() {
       });
 
       // More specific error messages
-      if (err.message && err.message.includes("fetch")) {
+      if (err.message && err.message.includes("Supabase configuration")) {
+        setError("Configuration error: Please check your .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set.");
+      } else if (err.message && (err.message.includes("fetch") || err.message.includes("Failed to fetch"))) {
         setError("Connection error. Please check your internet connection and try again.");
       } else if (err.message && err.message.includes("timeout")) {
         setError("Request timeout. Please check your internet connection.");
-      } else if (err.code === "PGRST116") {
+      } else if (err.code === "PGRST116" || err.code === "PGRST301") {
         setError("Database connection failed. Please check your Supabase configuration.");
-      } else if (err.message && err.message.includes("Failed to fetch")) {
+      } else if (err.message && err.message.includes("Network")) {
         setError("Network error. Please check your internet connection or try again later.");
       } else {
         setError(`Failed to load data: ${err.message || "Unknown error"}`);
