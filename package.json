@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/inject-env.js",
+    "build:mobile": "vite build && node scripts/inject-env.js && npx cap sync",
     "lint": "eslint .",
     "preview": "vite preview"
   },

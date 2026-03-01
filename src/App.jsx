@@ -62,18 +62,35 @@ export default function App() {
       setLoading(true);
       setError(null);
 
-      const { data: devotees, error: devoteesError } = await supabase
+      // Add timeout for mobile networks
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 30000)
+      );
+
+      const devoteesPromise = supabase
         .from("devotees")
         .select("*");
 
-      if (devoteesError) throw devoteesError;
-
-      const { data: history, error: historyError } = await supabase
+      const historyPromise = supabase
         .from("history")
         .select("*")
         .order("sung_date", { ascending: false });
 
-      if (historyError) throw historyError;
+      const [{ data: devotees, error: devoteesError }, { data: history, error: historyError }] = 
+        await Promise.race([
+          Promise.all([devoteesPromise, historyPromise]),
+          timeoutPromise
+        ]);
+
+      if (devoteesError) {
+        console.error('Devotees error:', devoteesError);
+        throw devoteesError;
+      }
+
+      if (historyError) {
+        console.error('History error:', historyError);
+        throw historyError;
+      }
 
       const processedData = devotees.map((devotee) => {
         const devoteeHistory = history.filter((h) => h.devotee_id === devotee.id);
@@ -96,10 +113,24 @@ export default function App() {
       setData(processedData);
     } catch (err) {
       console.error("Error fetching data:", err);
+      console.error("Error details:", {
+        message: err.message,
+        code: err.code,
+        details: err.details,
+        hint: err.hint,
+      });
+
+      // More specific error messages
       if (err.message && err.message.includes("fetch")) {
-        setError("Connection error. Please check your internet.");
+        setError("Connection error. Please check your internet connection and try again.");
+      } else if (err.message && err.message.includes("timeout")) {
+        setError("Request timeout. Please check your internet connection.");
+      } else if (err.code === "PGRST116") {
+        setError("Database connection failed. Please check your Supabase configuration.");
+      } else if (err.message && err.message.includes("Failed to fetch")) {
+        setError("Network error. Please check your internet connection or try again later.");
       } else {
-        setError("Failed to load data from database.");
+        setError(`Failed to load data: ${err.message || "Unknown error"}`);
       }
     } finally {
       setLoading(false);
