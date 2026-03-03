@@ -62,33 +62,70 @@ export default function App() {
       setLoading(true);
       setError(null);
 
+      console.log('🔄 Starting data fetch...');
+
       // Check if Supabase is properly initialized
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || window.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || window.VITE_SUPABASE_ANON_KEY;
 
+      console.log('📋 Environment check:');
+      console.log('  Supabase URL:', supabaseUrl ? `✅ ${supabaseUrl.substring(0, 40)}...` : '❌ Missing');
+      console.log('  Supabase Key:', supabaseKey ? '✅ Set' : '❌ Missing');
+
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Supabase configuration is missing. Please check your .env file.');
+        const errorMsg = 'Supabase configuration is missing. Please check your .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY';
+        console.error('❌', errorMsg);
+        throw new Error(errorMsg);
       }
 
-      // Fetch data with proper error handling
-      const { data: devotees, error: devoteesError } = await supabase
-        .from("devotees")
-        .select("*");
+      console.log('📡 Fetching devotees...');
+
+      // Fetch with proper timeout handling
+      let devotees, devoteesError;
+      try {
+        const devoteesPromise = supabase
+          .from("devotees")
+          .select("*");
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Connection timeout - Supabase server took too long to respond')), 20000)
+        );
+
+        const result = await Promise.race([
+          devoteesPromise,
+          timeoutPromise
+        ]);
+
+        devotees = result.data;
+        devoteesError = result.error;
+      } catch (timeoutError) {
+        console.error('❌ Request timeout:', timeoutError);
+        throw new Error('Connection timeout. Please check:\n1. Your internet connection\n2. Firewall/VPN is not blocking Supabase\n3. Supabase project is active');
+      }
 
       if (devoteesError) {
-        console.error('Devotees error:', devoteesError);
+        console.error('❌ Devotees error:', devoteesError);
+        // Check for specific error types
+        if (devoteesError.message?.includes('timeout') || devoteesError.message?.includes('network')) {
+          throw new Error('Network error connecting to Supabase. Please check your internet connection and firewall settings.');
+        }
         throw devoteesError;
       }
 
+      console.log('✅ Devotees loaded:', devotees?.length || 0);
+
+      console.log('📡 Fetching history...');
       const { data: history, error: historyError } = await supabase
         .from("history")
         .select("*")
         .order("sung_date", { ascending: false });
 
       if (historyError) {
-        console.error('History error:', historyError);
+        console.error('❌ History error:', historyError);
         throw historyError;
       }
+
+      console.log('✅ History loaded:', history?.length || 0);
 
       const processedData = devotees.map((devotee) => {
         const devoteeHistory = history.filter((h) => h.devotee_id === devotee.id);
@@ -108,32 +145,59 @@ export default function App() {
         };
       });
 
+      console.log('✅ Processing data...');
       setData(processedData);
+      console.log('✅ Data loaded successfully!');
     } catch (err) {
-      console.error("Error fetching data:", err);
-      console.error("Error details:", {
-        message: err.message,
+      console.error("❌ Error fetching data:", err);
+
+      // Capture detailed diagnostic info
+      const diagnosticInfo = {
+        message: err.message || "Unknown error",
+        name: err.name,
         code: err.code,
+        status: err.status,
         details: err.details,
         hint: err.hint,
-      });
+        timestamp: new Date().toISOString(),
+        url: import.meta.env.VITE_SUPABASE_URL,
+        userAgent: navigator.userAgent,
+        online: navigator.onLine,
+        connection: navigator.connection ? {
+          effectiveType: navigator.connection.effectiveType,
+          saveData: navigator.connection.saveData,
+          downlink: navigator.connection.downlink
+        } : 'unknown'
+      };
+
+      console.error("Diagnostic Details:", diagnosticInfo);
 
       // More specific error messages
+      let errorMessage = "Failed to load data";
+
       if (err.message && err.message.includes("Supabase configuration")) {
-        setError("Configuration error: Please check your .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set.");
-      } else if (err.message && (err.message.includes("fetch") || err.message.includes("Failed to fetch"))) {
-        setError("Connection error. Please check your internet connection and try again.");
-      } else if (err.message && err.message.includes("timeout")) {
-        setError("Request timeout. Please check your internet connection.");
+        errorMessage = "Configuration error: Please check your .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set.";
+      } else if (err.message && (err.message.includes("timeout") || err.message.includes("ERR_CONNECTION_TIMED_OUT") || err.name === 'AbortError')) {
+        errorMessage = "Connection timeout!\n\nPossible causes:\n1. Internet connection is slow or unstable\n2. Mobile Data/ISP is blocking Supabase\n3. Supabase project might be paused\n4. Network proxy settings\n\nTry:\n- Switch to WiFi if possible\n- Check if you have an active data plan\n- Verify Supabase project is active";
+      } else if (err.message && (err.message.includes("fetch") || err.message.includes("Failed to fetch") || err.message.includes("ERR_") || err.name === 'TypeError')) {
+        errorMessage = "Connection error!\n\nThis often happens on mobile data when:\n1. Your ISP blocks certain cloud services\n2. DNS resolution fails\n3. Signal is weak\n\nTry:\n- Toggle Airplane Mode\n- Use a different DNS (e.g. 8.8.8.8)\n- Check mobile usage limits";
       } else if (err.code === "PGRST116" || err.code === "PGRST301") {
-        setError("Database connection failed. Please check your Supabase configuration.");
+        errorMessage = "Database connection failed. Please check your Supabase configuration and ensure your project is active.";
+      } else if (err.code === "42501" || err.message?.includes("permission")) {
+        errorMessage = "Permission denied. Please check your Supabase API key has the correct permissions.";
       } else if (err.message && err.message.includes("Network")) {
-        setError("Network error. Please check your internet connection or try again later.");
+        errorMessage = "Network error. Please check your internet connection or try again later.";
       } else {
-        setError(`Failed to load data: ${err.message || "Unknown error"}`);
+        errorMessage = `Failed to load data: ${err.message || "Unknown error"}`;
       }
+
+      setError({
+        displayMessage: errorMessage,
+        diagnostics: diagnosticInfo
+      });
     } finally {
       setLoading(false);
+      console.log('🏁 Data fetch completed');
     }
   };
 
@@ -310,8 +374,10 @@ export default function App() {
     }
   };
 
+  // Show error first if it exists
+  if (error && data.length === 0) return <ErrorMessage error={error.displayMessage || error} diagnostics={error.diagnostics} onRetry={fetchData} />;
+  // Then show loading
   if (loading && data.length === 0) return <Loader message="Loading devotee data..." />;
-  if (error && data.length === 0) return <ErrorMessage error={error} onRetry={fetchData} />;
 
   return (
     <LoginGate>

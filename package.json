@@ -8,7 +8,9 @@
     "build": "vite build && node scripts/inject-env.js",
     "build:mobile": "vite build && node scripts/inject-env.js && npx cap sync",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:supabase": "node scripts/test-supabase-connection.js",
+    "check:env": "node scripts/check-env.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
