@@ -1,13 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Get environment variables with fallback for mobile/web wrapper
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 
-                    (typeof window !== 'undefined' ? window.VITE_SUPABASE_URL : null) || 
-                    ''
+const rawUrl = import.meta.env.VITE_SUPABASE_URL ||
+    (typeof window !== 'undefined' ? window.VITE_SUPABASE_URL : null) ||
+    '';
 
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
-                       (typeof window !== 'undefined' ? window.VITE_SUPABASE_ANON_KEY : null) || 
-                       ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    (typeof window !== 'undefined' ? window.VITE_SUPABASE_ANON_KEY : null) ||
+    '';
+
+// In production (Vercel), we use a proxy to bypass ISP blocks
+// In local development, we use the direct URL
+const isProduction = typeof window !== 'undefined' &&
+    !window.location.hostname.includes('localhost') &&
+    !window.location.hostname.includes('127.0.0.1');
+
+const supabaseUrl = isProduction ? '/api/supabase' : rawUrl;
 
 if (!supabaseUrl || !supabaseAnonKey) {
     console.error('⚠️ Supabase URL or Anon Key is missing. Check your .env setup.')
@@ -22,16 +30,16 @@ let supabaseClient = null;
 if (supabaseUrl && supabaseAnonKey) {
     // Configure Supabase client with mobile-friendly options
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false, // Important for mobile/web wrappers
-    },
-    global: {
-        headers: {
-            'X-Client-Info': 'kirtan-app',
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: false, // Important for mobile/web wrappers
         },
-    },
+        global: {
+            headers: {
+                'X-Client-Info': 'kirtan-app',
+            },
+        },
         realtime: {
             params: {
                 eventsPerSecond: 10,
