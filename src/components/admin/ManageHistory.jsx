@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { Trash2, Calendar, Search, Filter } from "lucide-react";
+import { Trash2, Calendar, Search, Filter, Plus } from "lucide-react";
 import { toast } from "react-hot-toast";
+import BulkHistoryModal from "./BulkHistoryModal";
 
 export default function ManageHistory() {
     const [history, setHistory] = useState([]);
@@ -10,6 +11,7 @@ export default function ManageHistory() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedIds, setSelectedIds] = useState([]);
     const [filterAarti, setFilterAarti] = useState("all");
+    const [showBulkModal, setShowBulkModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 50;
 
@@ -147,6 +149,25 @@ export default function ManageHistory() {
                     </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <button
+                        onClick={() => setShowBulkModal(true)}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            padding: "0.75rem 1rem",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "var(--color-saffron)",
+                            color: "white",
+                            cursor: "pointer",
+                            fontSize: "0.9rem",
+                            fontWeight: "600",
+                            boxShadow: "0 4px 12px rgba(245, 158, 11, 0.2)"
+                        }}
+                    >
+                        <Plus size={18} /> Add Records
+                    </button>
                     {selectedIds.length > 0 && (
                         <button
                             onClick={handleBulkDelete}
@@ -300,6 +321,12 @@ export default function ManageHistory() {
                         </div>
                     )}
                 </>
+            )}
+            {showBulkModal && (
+                <BulkHistoryModal
+                    onClose={() => setShowBulkModal(false)}
+                    onUploadComplete={fetchHistory}
+                />
             )}
         </div>
     );

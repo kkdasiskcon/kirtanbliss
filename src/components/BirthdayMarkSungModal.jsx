@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Save } from "lucide-react";
+import { X, Save, Calendar } from "lucide-react";
 import { AARTI_TYPES } from "../config";
 import { useState, useEffect } from "react";
 import Portal from "./Portal";
@@ -11,6 +11,7 @@ export default function BirthdayMarkSungModal({
     onConfirm,
 }) {
     const [selectedAarti, setSelectedAarti] = useState(AARTI_TYPES[0]);
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Scroll logic removed for Portals
     useEffect(() => {
@@ -18,7 +19,12 @@ export default function BirthdayMarkSungModal({
     }, [devotee]);
 
     const handleConfirm = () => {
-        onConfirm(selectedAarti.name.replace(" Singing", ""));
+        if (!selectedDate) return;
+        if (new Date(selectedDate) < new Date("2026-01-01")) {
+            alert("Please select a date from 1 January 2026 onwards.");
+            return;
+        }
+        onConfirm(selectedAarti.name.replace(" Singing", ""), selectedDate);
     };
 
     return (
@@ -65,42 +71,62 @@ export default function BirthdayMarkSungModal({
                                 {devotee["Devotee Name"]}
                             </p>
 
-                            <div style={{ marginBottom: "1.5rem" }}>
-                                <label style={{ display: "block", marginBottom: "0.75rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-primary)" }}>
-                                    Select Aarti:
-                                </label>
-                                <select
-                                    value={selectedAarti.name}
-                                    onChange={(e) => {
-                                        const aarti = AARTI_TYPES.find(a => a.name === e.target.value);
-                                        setSelectedAarti(aarti);
-                                    }}
-                                    disabled={updating}
-                                    style={{
-                                        width: "100%",
-                                        padding: "0.75rem",
-                                        borderRadius: "8px",
-                                        border: "2px solid var(--border-color)",
-                                        background: "white",
-                                        color: "var(--text-primary)",
-                                        fontSize: "1rem",
-                                        fontWeight: 600,
-                                        cursor: updating ? "not-allowed" : "pointer",
-                                        transition: "all 0.3s",
-                                        outline: "none"
-                                    }}
-                                >
-                                    {AARTI_TYPES.map((aarti) => (
-                                        <option key={aarti.name} value={aarti.name}>
-                                            {aarti.name.replace(" Singing", "")}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginBottom: "2rem" }}>
+                                <div>
+                                    <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-secondary)" }}>
+                                        <Calendar size={14} /> Select Date:
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={selectedDate}
+                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                        min="2026-01-01"
+                                        style={{
+                                            width: "100%",
+                                            padding: "0.75rem",
+                                            borderRadius: "8px",
+                                            border: "2px solid var(--border-color)",
+                                            outline: "none",
+                                            fontSize: "1rem",
+                                            boxSizing: "border-box"
+                                        }}
+                                    />
+                                </div>
 
-                            <p style={{ textAlign: "center", color: "var(--text-secondary)", marginBottom: "2rem", fontSize: "0.95rem" }}>
-                                This will add an entry to the history for today.
-                            </p>
+                                <div>
+                                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-secondary)" }}>
+                                        Select Aarti:
+                                    </label>
+                                    <select
+                                        value={selectedAarti.name}
+                                        onChange={(e) => {
+                                            const aarti = AARTI_TYPES.find(a => a.name === e.target.value);
+                                            setSelectedAarti(aarti);
+                                        }}
+                                        disabled={updating}
+                                        style={{
+                                            width: "100%",
+                                            padding: "0.75rem",
+                                            borderRadius: "8px",
+                                            border: "2px solid var(--border-color)",
+                                            background: "white",
+                                            color: "var(--text-primary)",
+                                            fontSize: "1rem",
+                                            fontWeight: 600,
+                                            cursor: updating ? "not-allowed" : "pointer",
+                                            transition: "all 0.3s",
+                                            outline: "none",
+                                            boxSizing: "border-box"
+                                        }}
+                                    >
+                                        {AARTI_TYPES.map((aarti) => (
+                                            <option key={aarti.name} value={aarti.name}>
+                                                {aarti.name.replace(" Singing", "")}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
 
                             <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
                                 <button

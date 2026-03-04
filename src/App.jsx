@@ -37,10 +37,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("allocation");
   const [updating, setUpdating] = useState(false);
   const [updateStatus, setUpdateStatus] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [allocationSearchQuery, setAllocationSearchQuery] = useState("");
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
+  const [birthdaySearchQuery, setBirthdaySearchQuery] = useState("");
   const [historyAartiFilter, setHistoryAartiFilter] = useState("all");
+  const [historyMonth, setHistoryMonth] = useState("all");
+  const [historyYear, setHistoryYear] = useState(new Date().getFullYear().toString());
   const [showRecommended, setShowRecommended] = useState(true);
   const [showBirthdayMarkSung, setShowBirthdayMarkSung] = useState(false);
+  const [birthdayMonth, setBirthdayMonth] = useState(new Date().getMonth().toString());
+  const [birthdayYear, setBirthdayYear] = useState(new Date().getFullYear().toString());
 
   const [birthdayDevotee, setBirthdayDevotee] = useState(null);
   const [devoteeTypeFilter, setDevoteeTypeFilter] = useState("all");
@@ -218,8 +224,8 @@ export default function App() {
 
   const filteredBySearch = filtered.filter((d) => {
     // Search Filter
-    if (searchQuery && searchQuery.trim()) {
-      if (!d["Devotee Name"].toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+    if (allocationSearchQuery && allocationSearchQuery.trim()) {
+      if (!d["Devotee Name"].toLowerCase().includes(allocationSearchQuery.toLowerCase().trim())) {
         return false;
       }
     }
@@ -241,52 +247,66 @@ export default function App() {
       "Last Sung Date": h.sung_date,
       "Sung Aarti": h.aarti_name
     })))
-    .sort((a, b) => new Date(b["Last Sung Date"]) - new Date(a["Last Sung Date"]))
-    .slice(0, 50);
+    .sort((a, b) => new Date(b["Last Sung Date"]) - new Date(a["Last Sung Date"]));
 
   const recentSingersFiltered = recentHistory.filter((d) => {
-    if (searchQuery && searchQuery.trim()) {
-      if (!d["Devotee Name"].toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+    const date = new Date(d["Last Sung Date"]);
+
+    // Search Filter
+    if (historySearchQuery && historySearchQuery.trim()) {
+      if (!d["Devotee Name"].toLowerCase().includes(historySearchQuery.toLowerCase().trim())) {
         return false;
       }
     }
+
+    // Aarti Filter
     if (historyAartiFilter && historyAartiFilter !== "all") {
       if (d["Sung Aarti"] !== historyAartiFilter) return false;
     }
+
+    // Month Filter
+    if (historyMonth !== "all") {
+      if (!d["Last Sung Date"] || date.getMonth().toString() !== historyMonth) return false;
+    }
+
+    // Year Filter
+    if (historyYear !== "all") {
+      if (!d["Last Sung Date"] || date.getFullYear().toString() !== historyYear) return false;
+    }
+
     return true;
   });
 
   const getUpcomingBirthdays = () => {
     const today = new Date();
-    const nextMonth = new Date(today);
-    nextMonth.setDate(today.getDate() + 30);
+
+    // Specific Month/Year view
+    const targetMonth = parseInt(birthdayMonth);
+    const targetYear = parseInt(birthdayYear);
 
     return data
       .filter((d) => {
         if (!d["DOB"]) return false;
         try {
-          const [year, month, day] = d["DOB"].split('-').map(Number);
-          const thisYear = today.getFullYear();
-          const birthday = new Date(thisYear, month - 1, day);
-          if (birthday < today) birthday.setFullYear(thisYear + 1);
-          return birthday >= today && birthday <= nextMonth;
+          const [dobYear, dobMonth, dobDay] = d["DOB"].split('-').map(Number);
+          return (dobMonth - 1) === targetMonth;
         } catch {
           return false;
         }
       })
       .map((d) => {
-        const [year, month, day] = d["DOB"].split('-').map(Number);
-        const thisYear = today.getFullYear();
-        let birthday = new Date(thisYear, month - 1, day);
-        if (birthday < today) birthday.setFullYear(thisYear + 1);
+        const [dobYear, dobMonth, dobDay] = d["DOB"].split('-').map(Number);
+        const birthday = new Date(targetYear, dobMonth - 1, dobDay);
+        const diffTime = birthday - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
         return {
           ...d,
           birthdayDate: birthday,
-          daysUntil: Math.ceil((birthday - today) / (1000 * 60 * 60 * 24)),
+          daysUntil: diffDays,
         };
       })
-      .sort((a, b) => a.daysUntil - b.daysUntil)
-      .slice(0, 15);
+      .sort((a, b) => a.birthdayDate - b.birthdayDate);
   };
 
   const upcomingBirthdays = getUpcomingBirthdays();
@@ -298,19 +318,21 @@ export default function App() {
     setUpdateStatus(null);
   };
 
-  const confirmMarkSung = async () => {
+  const confirmMarkSung = async (customDate, customAarti) => {
     setUpdating(true);
     const toastId = toast.loading("Updating...");
 
     try {
-      const aartiName = selectedAarti.name.replace(" Singing", "");
+      const aartiName = customAarti || selectedAarti.name.replace(" Singing", "");
+      const sungDate = customDate || new Date().toISOString().split('T')[0];
+
       const { error } = await supabase
         .from("history")
         .insert([
           {
             devotee_id: selectedDevotee.id,
             aarti_name: aartiName,
-            sung_date: new Date().toISOString().split('T')[0]
+            sung_date: sungDate
           }
         ]);
 
@@ -340,18 +362,19 @@ export default function App() {
     setShowBirthdayMarkSung(true);
   };
 
-  const confirmBirthdayMarkSung = async (aartiName) => {
+  const confirmBirthdayMarkSung = async (aartiName, customDate) => {
     setUpdating(true);
     const toastId = toast.loading("Updating...");
 
     try {
+      const sungDate = customDate || new Date().toISOString().split('T')[0];
       const { error } = await supabase
         .from("history")
         .insert([
           {
             devotee_id: birthdayDevotee.id,
             aarti_name: aartiName,
-            sung_date: new Date().toISOString().split('T')[0]
+            sung_date: sungDate
           }
         ]);
 
@@ -372,6 +395,19 @@ export default function App() {
       toast.error(msg, { id: toastId });
       setUpdating(false);
     }
+  };
+
+  const clearAllFilters = () => {
+    setAllocationSearchQuery("");
+    setHistorySearchQuery("");
+    setBirthdaySearchQuery("");
+    setHistoryAartiFilter("all");
+    setHistoryMonth("all");
+    setHistoryYear(new Date().getFullYear().toString());
+    setBirthdayMonth(new Date().getMonth().toString());
+    setBirthdayYear(new Date().getFullYear().toString());
+    setDevoteeTypeFilter("all");
+    toast.success("Filters cleared");
   };
 
   // Show error first if it exists
@@ -420,7 +456,7 @@ export default function App() {
 
             {filtered.length > 0 ? (
               <div className="allocation-content">
-                {showRecommended && topCandidate && !searchQuery ? (
+                {showRecommended && topCandidate && !allocationSearchQuery ? (
                   <RecommendedCard
                     devotee={topCandidate}
                     aartiName={selectedAarti.name}
@@ -443,15 +479,15 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div style={{ position: 'relative', minWidth: '280px', display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ position: 'relative', minWidth: '280px', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <div style={{ flex: 1, position: 'relative' }}>
                         <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                         <input
                           type="text"
                           className="list-search"
                           placeholder="Search name..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
+                          value={allocationSearchQuery}
+                          onChange={(e) => setAllocationSearchQuery(e.target.value)}
                           style={{
                             paddingLeft: '2.8rem',
                             height: '46px',
@@ -483,6 +519,26 @@ export default function App() {
                         <option value="Brahmachari">Brahmachari</option>
                         <option value="VOICE Devotee">VOICE</option>
                       </select>
+
+                      {(allocationSearchQuery || devoteeTypeFilter !== "all") && (
+                        <button
+                          onClick={clearAllFilters}
+                          style={{
+                            height: '46px',
+                            padding: '0 1rem',
+                            borderRadius: '14px',
+                            border: '1px solid var(--color-saffron)',
+                            background: 'white',
+                            color: 'var(--color-saffron)',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Clear
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -515,7 +571,7 @@ export default function App() {
           </>
         )}
 
-        {activeTab === "allocation" && !showRecommended && filtered.length > 0 && topCandidate && !searchQuery && (
+        {activeTab === "allocation" && !showRecommended && filtered.length > 0 && topCandidate && !allocationSearchQuery && (
           <button
             onClick={() => setShowRecommended(true)}
             style={{
@@ -561,12 +617,29 @@ export default function App() {
             history={recentSingersFiltered}
             filter={historyAartiFilter}
             onFilterChange={setHistoryAartiFilter}
+            searchQuery={historySearchQuery}
+            onSearchChange={setHistorySearchQuery}
+            selectedMonth={historyMonth}
+            onMonthChange={setHistoryMonth}
+            selectedYear={historyYear}
+            onYearChange={setHistoryYear}
+            onClearFilters={clearAllFilters}
             detectAarti={(d) => d["Sung Aarti"]}
           />
         )}
 
         {activeTab === "birthdays" && (
-          <BirthdayList birthdays={upcomingBirthdays} onMarkSung={handleMarkSungFromBirthday} />
+          <BirthdayList
+            birthdays={upcomingBirthdays}
+            onMarkSung={handleMarkSungFromBirthday}
+            searchQuery={birthdaySearchQuery}
+            onSearchChange={setBirthdaySearchQuery}
+            selectedMonth={birthdayMonth}
+            onMonthChange={setBirthdayMonth}
+            selectedYear={birthdayYear}
+            onYearChange={setBirthdayYear}
+            onClearFilters={clearAllFilters}
+          />
         )}
 
         {showMarkSung && selectedDevotee && (
@@ -576,6 +649,7 @@ export default function App() {
             updating={updating}
             onClose={() => !updating && setShowMarkSung(false)}
             onRefresh={confirmMarkSung}
+            initialAarti={selectedAarti.name.replace(" Singing", "")}
             isSupabase={true}
           />
         )}
