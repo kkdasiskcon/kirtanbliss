@@ -20,6 +20,8 @@ export default function BulkHistoryModal({ onClose, onUploadComplete }) {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedAarti, setSelectedAarti] = useState(AARTI_TYPES[0].name);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [isGuest, setIsGuest] = useState(false);
+    const [guestName, setGuestName] = useState("");
 
     useEffect(() => {
         const fetchDevotees = async () => {
@@ -35,25 +37,38 @@ export default function BulkHistoryModal({ onClose, onUploadComplete }) {
 
     const handleQuickAdd = async (e) => {
         e.preventDefault();
-        if (!selectedDevotee) {
+        if (!isGuest && !selectedDevotee) {
             toast.error("Please select a devotee");
+            return;
+        }
+        if (isGuest && !guestName.trim()) {
+            toast.error("Please enter guest name");
             return;
         }
 
         setUploading(true);
         try {
+            const insertData = {
+                sung_date: selectedDate,
+                aarti_name: selectedAarti
+            };
+
+            if (isGuest) {
+                insertData.guest_name = guestName.trim();
+                insertData.devotee_id = null;
+            } else {
+                insertData.devotee_id = selectedDevotee.id;
+            }
+
             const { error } = await supabase
                 .from("history")
-                .insert([{
-                    devotee_id: selectedDevotee.id,
-                    sung_date: selectedDate,
-                    aarti_name: selectedAarti
-                }]);
+                .insert([insertData]);
 
             if (error) throw error;
 
-            toast.success(`Added ${selectedDevotee.name}`);
+            toast.success(`Added ${isGuest ? guestName : selectedDevotee.name}`);
             setSearchName("");
+            setGuestName("");
             setSelectedDevotee(null);
             onUploadComplete(); // Refresh list in background
         } catch (err) {
@@ -124,24 +139,26 @@ export default function BulkHistoryModal({ onClose, onUploadComplete }) {
 
             const devoteeId = devoteeMap.get(name.toLowerCase());
 
-            if (!devoteeId) {
-                errors++;
-                newLogs.push(`❌ Error: Devotee "${name}" not found in database`);
-                continue;
-            }
-
             try {
+                const insertData = {
+                    sung_date: date,
+                    aarti_name: aarti
+                };
+
+                if (devoteeId) {
+                    insertData.devotee_id = devoteeId;
+                } else {
+                    insertData.guest_name = name;
+                    insertData.devotee_id = null;
+                }
+
                 const { error } = await supabase
                     .from("history")
-                    .insert([{
-                        devotee_id: devoteeId,
-                        sung_date: date,
-                        aarti_name: aarti
-                    }]);
+                    .insert([insertData]);
 
                 if (error) throw error;
                 added++;
-                newLogs.push(`✅ Added: ${name} (${aarti} on ${date})`);
+                newLogs.push(`✅ Added: ${name} ${!devoteeId ? '(Guest)' : ''} (${aarti} on ${date})`);
             } catch (err) {
                 console.error("Insert Error:", err);
                 errors++;
@@ -205,32 +222,57 @@ export default function BulkHistoryModal({ onClose, onUploadComplete }) {
                         <div style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}>
                             {activeTab === "quick" ? (
                                 <form onSubmit={handleQuickAdd} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.5rem" }}>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.9rem", color: isGuest ? "var(--color-saffron)" : "#64748b", fontWeight: 600 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isGuest}
+                                                onChange={(e) => setIsGuest(e.target.checked)}
+                                                style={{ width: "16px", height: "16px" }}
+                                            />
+                                            Is Guest Devotee?
+                                        </label>
+                                    </div>
+
                                     <div style={{ position: "relative" }}>
-                                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#64748b", marginBottom: "0.5rem" }}>Devotee Name</label>
-                                        <div style={{ position: "relative" }}>
-                                            <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#64748b", marginBottom: "0.5rem" }}>
+                                            {isGuest ? "Guest Name" : "Devotee Name"}
+                                        </label>
+                                        {isGuest ? (
                                             <input
                                                 type="text"
-                                                placeholder="Search name..."
-                                                value={selectedDevotee ? selectedDevotee.name : searchName}
-                                                onChange={(e) => {
-                                                    setSearchName(e.target.value);
-                                                    setSelectedDevotee(null);
-                                                    setShowDropdown(true);
-                                                }}
-                                                onFocus={() => setShowDropdown(true)}
-                                                style={{ width: "100%", padding: "0.75rem 1rem 0.75rem 2.8rem", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none", fontSize: "1rem" }}
+                                                placeholder="Enter guest name..."
+                                                value={guestName}
+                                                onChange={(e) => setGuestName(e.target.value)}
+                                                autoFocus
+                                                style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "10px", border: "2px solid var(--color-saffron)", outline: "none", fontSize: "1rem" }}
                                             />
-                                            {selectedDevotee && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSelectedDevotee(null)}
-                                                    style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer" }}
-                                                >
-                                                    <X size={16} />
-                                                </button>
-                                            )}
-                                        </div>
+                                        ) : (
+                                            <div style={{ position: "relative" }}>
+                                                <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search name..."
+                                                    value={selectedDevotee ? selectedDevotee.name : searchName}
+                                                    onChange={(e) => {
+                                                        setSearchName(e.target.value);
+                                                        setSelectedDevotee(null);
+                                                        setShowDropdown(true);
+                                                    }}
+                                                    onFocus={() => setShowDropdown(true)}
+                                                    style={{ width: "100%", padding: "0.75rem 1rem 0.75rem 2.8rem", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none", fontSize: "1rem" }}
+                                                />
+                                                {selectedDevotee && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedDevotee(null)}
+                                                        style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer" }}
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
 
                                         {showDropdown && searchName && !selectedDevotee && (
                                             <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "white", borderRadius: "10px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", border: "1px solid #e2e8f0", marginTop: "0.25rem", zIndex: 10, maxHeight: "200px", overflowY: "auto" }}>
@@ -276,8 +318,8 @@ export default function BulkHistoryModal({ onClose, onUploadComplete }) {
 
                                     <button
                                         type="submit"
-                                        disabled={uploading || !selectedDevotee}
-                                        style={{ marginTop: "1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1rem", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, var(--color-saffron), #f59e0b)", color: "white", fontWeight: 700, fontSize: "1rem", cursor: (uploading || !selectedDevotee) ? "not-allowed" : "pointer", opacity: (uploading || !selectedDevotee) ? 0.7 : 1, transition: "all 0.3s" }}
+                                        disabled={uploading || (!selectedDevotee && !isGuest)}
+                                        style={{ marginTop: "1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1rem", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, var(--color-saffron), #f59e0b)", color: "white", fontWeight: 700, fontSize: "1rem", cursor: (uploading || (!selectedDevotee && !isGuest)) ? "not-allowed" : "pointer", opacity: (uploading || (!selectedDevotee && !isGuest)) ? 0.7 : 1, transition: "all 0.3s" }}
                                     >
                                         {uploading ? "Adding..." : <><UserPlus size={20} /> Add & Next</>}
                                     </button>

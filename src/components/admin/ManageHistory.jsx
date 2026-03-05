@@ -25,6 +25,7 @@ export default function ManageHistory() {
                     id,
                     sung_date,
                     aarti_name,
+                    guest_name,
                     devotees (
                         name,
                         contact
@@ -102,7 +103,8 @@ export default function ManageHistory() {
     };
 
     const filteredHistory = history.filter(item => {
-        const matchesSearch = item.devotees?.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const devoteeName = item.devotees?.name || item.guest_name || "";
+        const matchesSearch = devoteeName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFilter = filterAarti === "all" || item.aarti_name === filterAarti;
         return matchesSearch && matchesFilter;
     });
@@ -236,7 +238,7 @@ export default function ManageHistory() {
                                             </div>
                                         </td>
                                         <td style={{ padding: "1rem", fontWeight: 500, color: "var(--text-primary)" }}>
-                                            {h.devotees?.name || "Unknown"}
+                                            {h.devotees?.name || (h.guest_name ? `${h.guest_name} (Guest)` : "Unknown")}
                                         </td>
                                         <td style={{ padding: "1rem" }}>
                                             <span style={{
@@ -252,7 +254,7 @@ export default function ManageHistory() {
                                         </td>
                                         <td style={{ padding: "1rem", textAlign: "right" }}>
                                             <button
-                                                onClick={() => handleDelete(h.id, h.devotees?.name, h.sung_date, h.aarti_name)}
+                                                onClick={() => handleDelete(h.id, h.devotees?.name || h.guest_name, h.sung_date, h.aarti_name)}
                                                 style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #fee2e2", background: "#fef2f2", color: "#ef4444", cursor: "pointer" }}
                                                 title="Delete Record"
                                             >

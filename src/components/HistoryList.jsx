@@ -174,8 +174,19 @@ export default function HistoryList({
                             }}
                         >
                             <div className="history-info">
-                                <div className="history-name" style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "1rem" }}>
+                                <div className="history-name" style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                     {d["Devotee Name"]}
+                                    {d.isGuest && (
+                                        <span style={{
+                                            fontSize: "0.65rem",
+                                            background: "#f1f5f9",
+                                            color: "#64748b",
+                                            padding: "0.1rem 0.4rem",
+                                            borderRadius: "4px",
+                                            fontWeight: 700,
+                                            textTransform: "uppercase"
+                                        }}>Guest</span>
+                                    )}
                                 </div>
                                 <div className="history-details" style={{ display: "flex", gap: "1rem", fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
                                     <span>{formatDate(d["Last Sung Date"])}</span>

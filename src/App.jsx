@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import { UserPlus, Search, ListFilter } from "lucide-react";
+import { UserPlus, Search, ListFilter, Plus } from "lucide-react";
 import "./App.css";
 
 // Config & Utils
@@ -50,6 +50,8 @@ export default function App() {
 
   const [birthdayDevotee, setBirthdayDevotee] = useState(null);
   const [devoteeTypeFilter, setDevoteeTypeFilter] = useState("all");
+  const [showGuestMarkSung, setShowGuestMarkSung] = useState(false);
+  const [guestName, setGuestName] = useState("");
 
 
   // Reset recommended view when aarti changes
@@ -151,8 +153,24 @@ export default function App() {
         };
       });
 
-      console.log('✅ Processing data...');
-      setData(processedData);
+      // Also get history entries that HAVE NO devotee_id (Guest Entries)
+      const guestHistory = history
+        .filter(h => !h.devotee_id && h.guest_name)
+        .map(h => ({
+          id: `guest-${h.id}`,
+          "Devotee Name": `${h.guest_name} (Guest)`,
+          "Contact": null,
+          "DOB": null,
+          "Last Sung Date": h.sung_date,
+          "Times Sung": 1,
+          devotee_type: "Guest",
+          skills: [],
+          isGuest: true,
+          history: [h]
+        }));
+
+      console.log('✅ Processing data and guests...');
+      setData([...processedData, ...guestHistory]);
       console.log('✅ Data loaded successfully!');
     } catch (err) {
       console.error("❌ Error fetching data:", err);
@@ -244,6 +262,7 @@ export default function App() {
   const recentHistory = data
     .flatMap(d => d.history.map(h => ({
       ...d,
+      "Devotee Name": d.isGuest ? d["Devotee Name"] : d["Devotee Name"], // Keep original guest name logic
       "Last Sung Date": h.sung_date,
       "Sung Aarti": h.aarti_name
     })))
@@ -318,7 +337,7 @@ export default function App() {
     setUpdateStatus(null);
   };
 
-  const confirmMarkSung = async (customDate, customAarti) => {
+  const confirmMarkSung = async (customDate, customAarti, guestName = null) => {
     setUpdating(true);
     const toastId = toast.loading("Updating...");
 
@@ -326,15 +345,21 @@ export default function App() {
       const aartiName = customAarti || selectedAarti.name.replace(" Singing", "");
       const sungDate = customDate || new Date().toISOString().split('T')[0];
 
+      const insertData = {
+        aarti_name: aartiName,
+        sung_date: sungDate
+      };
+
+      if (selectedDevotee?.isGuestEntry) {
+        insertData.guest_name = guestName || selectedDevotee.name;
+        insertData.devotee_id = null;
+      } else {
+        insertData.devotee_id = selectedDevotee.id;
+      }
+
       const { error } = await supabase
         .from("history")
-        .insert([
-          {
-            devotee_id: selectedDevotee.id,
-            aarti_name: aartiName,
-            sung_date: sungDate
-          }
-        ]);
+        .insert([insertData]);
 
       if (error) throw error;
 
@@ -350,8 +375,8 @@ export default function App() {
 
     } catch (err) {
       console.error("Error updating:", err);
-      const msg = "Failed to update history.";
-      setUpdateStatus({ type: "error", message: msg });
+      const msg = err.message || "Failed to update history.";
+      setUpdateStatus({ type: "error", message: `❌ ${msg}` });
       toast.error(msg, { id: toastId });
       setUpdating(false);
     }
@@ -424,26 +449,54 @@ export default function App() {
         <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {activeTab === 'allocation' && (
-          <div className="top-controls">
-            <button
-              className="icon-button primary"
-              onClick={() => setShowAddDevotee(true)}
-              style={{
-                padding: '0.8rem 1.75rem',
-                fontSize: '1rem',
-                borderRadius: '50px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-                boxShadow: '0 4px 15px rgba(234, 88, 12, 0.3)',
-                background: 'var(--color-saffron)',
-                color: 'white',
-                fontWeight: 'bold',
-                border: '2px solid white'
-              }}
-            >
-              <UserPlus size={20} /> Add New Devotee
-            </button>
+          <div className="top-controls" style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                className="icon-button primary"
+                onClick={() => setShowAddDevotee(true)}
+                style={{
+                  padding: '0.8rem 1.5rem',
+                  fontSize: '0.95rem',
+                  borderRadius: '50px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  boxShadow: '0 4px 15px rgba(234, 88, 12, 0.3)',
+                  background: 'var(--color-saffron)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  border: '2px solid white',
+                  whiteSpace: 'nowrap',
+                  width: 'auto'
+                }}
+              >
+                <UserPlus size={20} /> Add New Devotee
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => {
+                  setSelectedDevotee({ name: "", isGuestEntry: true });
+                  setShowMarkSung(true);
+                }}
+                style={{
+                  padding: '0.8rem 1.5rem',
+                  fontSize: '0.95rem',
+                  borderRadius: '50px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+                  background: 'white',
+                  color: 'var(--text-primary)',
+                  fontWeight: 'bold',
+                  border: '2px solid var(--border-color)',
+                  whiteSpace: 'nowrap',
+                  width: 'auto'
+                }}
+              >
+                <Plus size={20} color="var(--color-saffron)" /> Guest Entry
+              </button>
+            </div>
           </div>
         )}
 

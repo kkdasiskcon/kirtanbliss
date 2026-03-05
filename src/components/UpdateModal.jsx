@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import Portal from "./Portal";
-import { X, RefreshCw, CheckCircle, Save, Calendar, Music } from "lucide-react";
+import { X, RefreshCw, CheckCircle, Save, Calendar, Music, UserPlus } from "lucide-react";
 import { AARTI_TYPES } from "../config";
 
 export default function UpdateModal({
@@ -14,6 +14,7 @@ export default function UpdateModal({
 }) {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedAarti, setSelectedAarti] = useState(initialAarti);
+    const [guestName, setGuestName] = useState(devotee?.isGuestEntry ? (devotee.name || "") : "");
 
     // No-op for Portals
     useEffect(() => {
@@ -26,7 +27,11 @@ export default function UpdateModal({
             alert("Please select a date from 1 January 2026 onwards.");
             return;
         }
-        onRefresh(selectedDate, selectedAarti);
+        if (devotee?.isGuestEntry && !guestName.trim()) {
+            alert("Please enter a guest name.");
+            return;
+        }
+        onRefresh(selectedDate, selectedAarti, devotee?.isGuestEntry ? guestName.trim() : null);
     };
 
     return (
@@ -57,7 +62,8 @@ export default function UpdateModal({
                     >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", padding: "1.5rem 1.5rem 0", flexShrink: 0 }}>
                             <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)", fontWeight: 700 }}>
-                                <CheckCircle color="var(--color-tulsi)" /> Confirm Action
+                                {devotee?.isGuestEntry ? <UserPlus color="var(--color-saffron)" /> : <CheckCircle color="var(--color-tulsi)" />}
+                                {devotee?.isGuestEntry ? "Guest Kirtan Entry" : "Confirm Action"}
                             </h3>
                             <button
                                 onClick={onClose}
@@ -69,9 +75,31 @@ export default function UpdateModal({
                         </div>
 
                         <div style={{ padding: "0 1.5rem 1.5rem", flex: 1, overflowY: "auto" }}>
-                            <p className="modal-devotee-name" style={{ fontSize: "1.5rem", color: "var(--color-saffron)", textAlign: "center", margin: "1rem 0 1.5rem 0", fontWeight: 700 }}>
-                                {devotee["Devotee Name"]}
-                            </p>
+                            {devotee?.isGuestEntry ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", margin: "1rem 0 1.5rem 0" }}>
+                                    <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)" }}>Guest Devotee Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter guest name..."
+                                        value={guestName}
+                                        onChange={(e) => setGuestName(e.target.value)}
+                                        autoFocus
+                                        style={{
+                                            padding: "0.75rem",
+                                            borderRadius: "8px",
+                                            border: "2px solid var(--border-color)",
+                                            fontSize: "1.25rem",
+                                            fontWeight: 700,
+                                            color: "var(--color-saffron)",
+                                            textAlign: "center"
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <p className="modal-devotee-name" style={{ fontSize: "1.5rem", color: "var(--color-saffron)", textAlign: "center", margin: "1rem 0 1.5rem 0", fontWeight: 700 }}>
+                                    {devotee["Devotee Name"]}
+                                </p>
+                            )}
 
                             {updateStatus && (
                                 <motion.div
