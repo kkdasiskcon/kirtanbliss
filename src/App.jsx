@@ -15,7 +15,6 @@ import Tabs from "./components/Tabs";
 import AartiSelector from "./components/AartiSelector";
 import Loader from "./components/Loader";
 import ErrorMessage from "./components/ErrorMessage";
-import RecommendedCard from "./components/RecommendedCard";
 import DevoteeCard from "./components/DevoteeCard";
 import HistoryList from "./components/HistoryList";
 import BirthdayList from "./components/BirthdayList";
@@ -43,7 +42,6 @@ export default function App() {
   const [historyAartiFilter, setHistoryAartiFilter] = useState("all");
   const [historyMonth, setHistoryMonth] = useState("all");
   const [historyYear, setHistoryYear] = useState(new Date().getFullYear().toString());
-  const [showRecommended, setShowRecommended] = useState(true);
   const [showBirthdayMarkSung, setShowBirthdayMarkSung] = useState(false);
   const [birthdayMonth, setBirthdayMonth] = useState(new Date().getMonth().toString());
   const [birthdayYear, setBirthdayYear] = useState(new Date().getFullYear().toString());
@@ -54,10 +52,6 @@ export default function App() {
   const [guestName, setGuestName] = useState("");
 
 
-  // Reset recommended view when aarti changes
-  useEffect(() => {
-    setShowRecommended(true);
-  }, [selectedAarti]);
 
   useEffect(() => {
     fetchData();
@@ -230,7 +224,7 @@ export default function App() {
       const aartiName = selectedAarti.name.replace(" Singing", "");
 
       // Skills open for all
-      if (aartiName === "Balaji Mangal Aarti" || aartiName === "SP Worship") {
+      if (aartiName === "Balaji Mangal Aarti" || aartiName === "SP Worship" || aartiName === "Tulsi Worship") {
         return true;
       }
 
@@ -509,16 +503,8 @@ export default function App() {
 
             {filtered.length > 0 ? (
               <div className="allocation-content">
-                {showRecommended && topCandidate && !allocationSearchQuery ? (
-                  <RecommendedCard
-                    devotee={topCandidate}
-                    aartiName={selectedAarti.name}
-                    onMarkSung={handleMarkSung}
-                    onClose={() => setShowRecommended(false)}
-                  />
-                ) : (
                   <div style={{ minWidth: '380px' }}></div>
-                )}
+
 
                 <div className="eligible-section glass-panel">
                   <div className="section-header-row">
@@ -624,46 +610,6 @@ export default function App() {
           </>
         )}
 
-        {activeTab === "allocation" && !showRecommended && filtered.length > 0 && topCandidate && !allocationSearchQuery && (
-          <button
-            onClick={() => setShowRecommended(true)}
-            style={{
-              position: 'fixed',
-              bottom: '2rem',
-              right: '2rem',
-              background: 'linear-gradient(135deg, var(--color-saffron), var(--color-saffron-dark))',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              width: '60px',
-              height: '60px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(37, 99, 235, 0.4)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              zIndex: 100,
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              hover: {
-                transform: 'scale(1.1)',
-                boxShadow: '0 12px 32px rgba(37, 99, 235, 0.5)'
-              }
-            }}
-            title="Show recommended singer"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.1)';
-              e.currentTarget.style.boxShadow = '0 12px 32px rgba(37, 99, 235, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(37, 99, 235, 0.4)';
-            }}
-          >
-            ⭐
-          </button>
-        )}
 
         {activeTab === "history" && (
           <HistoryList

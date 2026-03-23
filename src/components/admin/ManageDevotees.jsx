@@ -153,7 +153,7 @@ export default function ManageDevotees() {
                         onClick={() => setShowCsvModal(true)}
                         style={{ background: "white", color: "var(--text-secondary)", border: "1px solid #e2e8f0" }}
                     >
-                        <FileText size={18} /> Import CSV
+                        <FileText size={18} /> Import Data
                     </button>
                     <button
                         className="modal-button primary"

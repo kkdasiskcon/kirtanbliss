@@ -22,7 +22,7 @@ export default function AartiSelector({ selectedAarti, onSelect }) {
                             selectedAarti.name === aarti.name ? "white" : "var(--color-saffron)"
                         }
                     />
-                    <span>{aarti.name.replace(" Singing", "")}</span>
+                    <span>{aarti.name === "Guru Puja Singing" ? aarti.name : aarti.name.replace(" Singing", "")}</span>
                 </motion.button>
             ))}
         </div>

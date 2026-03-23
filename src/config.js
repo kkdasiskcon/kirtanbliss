@@ -17,8 +17,8 @@ export const AARTI_TYPES = [
     keywords: ["tulsi arati", "tulasi", "tulsi", "tulasi kirtan"],
   },
   {
-    name: "Gurupuja Singing",
-    keywords: ["gurupuja", "guru pooja", "guru puja", "gurupooja"],
+    name: "Guru Puja Singing",
+    keywords: ["gurupuja", "guru pooja", "guru puja", "gurupooja", "guru puja singing"],
   },
   {
     name: "Balaji Mangal Aarti",
@@ -27,5 +27,9 @@ export const AARTI_TYPES = [
   {
     name: "SP Worship",
     keywords: ["sp worship", "srila prabhupada worship", "prabhupada worship"],
+  },
+  {
+    name: "Tulsi Worship",
+    keywords: ["tulsi worship", "tulasi worship", "tulsi seva", "tulsi puja"],
   },
 ];
