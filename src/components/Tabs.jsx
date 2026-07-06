@@ -1,14 +1,13 @@
 
 import { motion } from "framer-motion";
-import { ClipboardList, History, Cake, Settings } from "lucide-react";
+import { ClipboardList, BarChart2, Cake } from "lucide-react";
 
 
 export default function Tabs({ activeTab, setActiveTab }) {
     const tabs = [
-        { id: "allocation", label: "Allocation", icon: ClipboardList },
-        { id: "history", label: "History", icon: History },
-        { id: "birthdays", label: "Birthdays", icon: Cake },
-        { id: "admin", label: "Admin", icon: Settings },
+        { id: "allocation", label: "Allocation & Devotees", icon: ClipboardList },
+        { id: "birthdays", label: "Birthdays 🎂", icon: Cake },
+        { id: "history", label: "History & Analytics", icon: BarChart2 },
     ];
 
 

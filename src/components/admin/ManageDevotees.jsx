@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { Search, Edit, Trash2, UserPlus, Phone, Calendar, FileText } from "lucide-react";
+import { Search, Edit, Trash2, UserPlus, Phone, Calendar, FileText, GitMerge } from "lucide-react";
 import { toast } from "react-hot-toast";
 import EditDevoteeModal from "./EditDevoteeModal";
 import AddDevoteeModal from "../AddDevoteeModal";
 import CsvUploadModal from "./CsvUploadModal";
+import MergeDevoteesModal from "./MergeDevoteesModal";
 
 
 export default function ManageDevotees() {
@@ -18,6 +19,7 @@ export default function ManageDevotees() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 50;
     const [showCsvModal, setShowCsvModal] = useState(false);
+    const [showMergeModal, setShowMergeModal] = useState(false);
 
     const fetchDevotees = async () => {
         setLoading(true);
@@ -148,6 +150,13 @@ export default function ManageDevotees() {
                             <Trash2 size={18} /> Delete Selected ({selectedIds.length})
                         </button>
                     )}
+                    <button
+                        className="modal-button"
+                        onClick={() => setShowMergeModal(true)}
+                        style={{ background: "white", color: "var(--text-secondary)", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                    >
+                        <GitMerge size={18} /> Merge Profiles
+                    </button>
                     <button
                         className="modal-button"
                         onClick={() => setShowCsvModal(true)}
@@ -348,6 +357,14 @@ export default function ManageDevotees() {
                 <CsvUploadModal
                     onClose={() => setShowCsvModal(false)}
                     onUploadSuccess={fetchDevotees}
+                />
+            )}
+
+            {showMergeModal && (
+                <MergeDevoteesModal
+                    devotees={devotees}
+                    onClose={() => setShowMergeModal(false)}
+                    onMerged={fetchDevotees}
                 />
             )}
         </div>

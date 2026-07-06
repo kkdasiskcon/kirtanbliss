@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { Trash2, Calendar, Search, Filter, Plus } from "lucide-react";
+import { Trash2, Calendar, Search, Filter, Plus, Phone, MessageCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import BulkHistoryModal from "./BulkHistoryModal";
 
@@ -31,8 +31,7 @@ export default function ManageHistory() {
                         contact
                     )
                 `)
-                .order("sung_date", { ascending: false })
-                .limit(100); // Limit to last 100 for performance, maybe add pagination later
+                .order("sung_date", { ascending: false });
 
             if (error) throw error;
             setHistory(data);
@@ -253,13 +252,30 @@ export default function ManageHistory() {
                                             </span>
                                         </td>
                                         <td style={{ padding: "1rem", textAlign: "right" }}>
-                                            <button
-                                                onClick={() => handleDelete(h.id, h.devotees?.name || h.guest_name, h.sung_date, h.aarti_name)}
-                                                style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #fee2e2", background: "#fef2f2", color: "#ef4444", cursor: "pointer" }}
-                                                title="Delete Record"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", alignItems: "center" }}>
+                                                {h.devotees?.contact && (
+                                                    <>
+                                                        <a href={`tel:${h.devotees.contact}`} className="icon-button" style={{ padding: "0.4rem", display: "inline-flex", alignItems: "center", justifyContent: "center" }} title="Call">
+                                                            <Phone size={14} />
+                                                        </a>
+                                                        <a
+                                                            href={`sms:${h.devotees.contact}?body=${encodeURIComponent(`Hello ${h.devotees.name}, Namaste.`)}`}
+                                                            className="icon-button"
+                                                            style={{ padding: "0.4rem", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                                                            title="Send SMS"
+                                                        >
+                                                            <MessageCircle size={14} />
+                                                        </a>
+                                                    </>
+                                                )}
+                                                <button
+                                                    onClick={() => handleDelete(h.id, h.devotees?.name || h.guest_name, h.sung_date, h.aarti_name)}
+                                                    style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid #fee2e2", background: "#fef2f2", color: "#ef4444", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                                                    title="Delete Record"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
