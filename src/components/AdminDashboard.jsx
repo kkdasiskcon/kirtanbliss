@@ -21,16 +21,20 @@ export default function AdminDashboard() {
                 <button
                     onClick={() => setActiveTab("history")}
                     className={`tab-button ${activeTab === "history" ? "active" : ""}`}
-                    style={{ fontSize: "0.9rem", padding: "0.5rem 1rem" }}
+                    style={{ fontSize: "0.9rem", padding: "0.5rem 1rem", display: "flex", alignItems: "center" }}
                 >
-                    <History size={16} style={{ marginRight: '0.5rem' }} /> History Logs
+                    <History size={16} style={{ marginRight: '0.5rem' }} />
+                    <span className="tab-label-full">History Logs</span>
+                    <span className="tab-label-short">Logs</span>
                 </button>
                 <button
                     onClick={() => setActiveTab("analytics")}
                     className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
-                    style={{ fontSize: "0.9rem", padding: "0.5rem 1rem" }}
+                    style={{ fontSize: "0.9rem", padding: "0.5rem 1rem", display: "flex", alignItems: "center" }}
                 >
-                    <Activity size={16} style={{ marginRight: '0.5rem' }} /> Analytics & Statistics
+                    <Activity size={16} style={{ marginRight: '0.5rem' }} />
+                    <span className="tab-label-full">Analytics & Statistics</span>
+                    <span className="tab-label-short">Analytics</span>
                 </button>
             </div>
 

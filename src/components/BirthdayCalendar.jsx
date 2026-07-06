@@ -307,6 +307,7 @@ export default function BirthdayCalendar({ devotees = [], onMarkSung, onOpenDeta
                 {selectedDay.devotees.map((d) => (
                   <div
                     key={d.id}
+                    className="birthday-devotee-card"
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                       background: "white", borderRadius: "12px", padding: "0.85rem 1rem",
@@ -315,11 +316,11 @@ export default function BirthdayCalendar({ devotees = [], onMarkSung, onOpenDeta
                     }}
                   >
                     {/* Devotee info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div style={{ flex: 1, minWidth: "200px" }}>
+                      <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)", whiteSpace: "normal", wordBreak: "break-word" }}>
                         {d["Devotee Name"]}
                       </div>
-                      <div style={{ fontSize: "0.76rem", color: "var(--text-secondary)", marginTop: "0.1rem" }}>
+                      <div style={{ fontSize: "0.76rem", color: "var(--text-secondary)", marginTop: "0.1rem", lineHeight: "1.4" }}>
                         <span style={{
                           background: d.devotee_type === "Brahmachari" ? "#fff7ed" : "#f1f5f9",
                           color: d.devotee_type === "Brahmachari" ? "#c2410c" : "#64748b",
@@ -334,7 +335,7 @@ export default function BirthdayCalendar({ devotees = [], onMarkSung, onOpenDeta
                     </div>
 
                     {/* Action buttons */}
-                    <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexShrink: 0 }}>
+                    <div className="birthday-devotee-actions" style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexShrink: 0 }}>
                       {/* Info button */}
                       {onOpenDetails && (
                         <button

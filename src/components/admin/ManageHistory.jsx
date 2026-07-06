@@ -124,10 +124,10 @@ export default function ManageHistory() {
     const uniqueAartis = [...new Set(history.map(h => h.aarti_name))];
 
     return (
-        <div style={{ padding: "1.5rem" }}>
+        <div style={{ padding: "1rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: 'wrap', gap: '1rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', flex: 1, minWidth: "300px" }}>
-                    <div style={{ position: "relative", flex: 1 }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flex: '1 1 100%', flexWrap: 'wrap' }}>
+                    <div style={{ position: "relative", flex: '1 1 180px' }}>
                         <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
                         <input
                             type="text"
@@ -137,19 +137,19 @@ export default function ManageHistory() {
                             style={{ width: "100%", paddingLeft: "2.8rem", padding: "0.75rem 1rem 0.75rem 2.8rem", borderRadius: "8px", border: "2px solid var(--border-color)", background: "white", color: "var(--text-primary)", fontSize: "0.95rem", transition: "all 0.3s", outline: "none" }}
                         />
                     </div>
-                    <div style={{ position: "relative" }}>
+                    <div style={{ position: "relative", flex: '1 1 120px' }}>
                         <Filter size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
                         <select
                             value={filterAarti}
                             onChange={(e) => setFilterAarti(e.target.value)}
-                            style={{ paddingLeft: "2.8rem", appearance: "none", paddingRight: "2rem", padding: "0.75rem 2rem 0.75rem 2.8rem", borderRadius: "8px", border: "2px solid var(--border-color)", background: "white", color: "var(--text-primary)", fontSize: "0.95rem", transition: "all 0.3s", outline: "none", cursor: "pointer" }}
+                            style={{ width: "100%", paddingLeft: "2.8rem", appearance: "none", paddingRight: "2rem", padding: "0.75rem 2rem 0.75rem 2.8rem", borderRadius: "8px", border: "2px solid var(--border-color)", background: "white", color: "var(--text-primary)", fontSize: "0.95rem", transition: "all 0.3s", outline: "none", cursor: "pointer" }}
                         >
                             <option value="all">All Aartis</option>
                             {uniqueAartis.map(a => <option key={a} value={a}>{a}</option>)}
                         </select>
                     </div>
                 </div>
-                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: 'wrap' }}>
                     <button
                         onClick={() => setShowBulkModal(true)}
                         style={{
@@ -203,7 +203,7 @@ export default function ManageHistory() {
             ) : (
                 <>
                     <div style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem" }}>
+                        <table style={{ width: "100%", minWidth: "550px", borderCollapse: "collapse", fontSize: "0.95rem" }}>
                             <thead>
                                 <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
                                     <th style={{ padding: "1rem", width: "40px" }}>

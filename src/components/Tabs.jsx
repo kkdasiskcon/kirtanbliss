@@ -45,7 +45,11 @@ export default function Tabs({ activeTab, setActiveTab }) {
                                 zIndex: 1,
                             }}
                         >
-                            <Icon size={18} /> {tab.label}
+                            <Icon size={18} />
+                            <span className="tab-label-full">{tab.label}</span>
+                            <span className="tab-label-short">
+                                {tab.id === "allocation" ? "Allocation" : tab.id === "birthdays" ? "Birthdays" : "History"}
+                            </span>
                         </span>
                     </button>
                 );
